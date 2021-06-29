@@ -75,6 +75,8 @@ class _MyHomePageState extends State<MyHomePage> {
       for (BluetoothCharacteristic c in s.characteristics) {
         if (c.uuid.toString() == _characteristicReadId) _characteristicRead = c;
         if (c.uuid.toString() == _characteristicWriteId) _characteristicWrite = c;
+        if (c.properties.write) print("Write avaiable on: " + c.uuid.toString());
+        if (c.properties.read && c.properties.notify) print("Read/Noitify avaiable on: " + c.uuid.toString());
       }
     }
 
@@ -109,6 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void disconnect() async {
     _port.disconnect();
+    _port = null;
     setState(() {
       connectedBoard = null;
     });
@@ -130,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     oldBoard = board;
     if (squares.length > 0) {
-      await connectedBoard.toggleLeds(squares);
+      await connectedBoard.turnOnLeds(squares);
     }
     Future.delayed(Duration(seconds: 1), () => (lightChangeSquareBlock = false));
   }
@@ -205,8 +208,16 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text("Get Version (" + (version ?? "_") + ")")
           ),
           TextButton(
-            onPressed: () => connectedBoard.extinguishAllLeds(),
+            onPressed: () => connectedBoard.turnOnAllLeds(),
             child: Text("Turn on LED's")
+          ),
+          TextButton(
+            onPressed: () => connectedBoard.extinguishAllLeds(),
+            child: Text("Turn off LED's")
+          ),
+          TextButton(
+            onPressed: () => connectedBoard.reset(),
+            child: Text("Reset")
           ),
           TextButton(
             onPressed: disconnect,

@@ -8,16 +8,26 @@ class MillenniumMessage {
     if (firstParityFail != null) throw MillenniumInvalidMessageException(firstParityFail + 1);
 
     List<String> asciiChars = buffer.map((n) => String.fromCharCode(n & 127)).toList();
-    int nextChecksum = nextChecksumIndex(asciiChars);
 
-    if (nextChecksum == null) throw MillenniumUncompleteMessage();
+    int nextChecksum;
+    List<String> message = [];
 
-    List<String> message = asciiChars.sublist(0, nextChecksum + 2);
-    if (!checkChecksum(message)) throw MillenniumInvalidMessageException(message.length);
+    do {
+      nextChecksum = nextChecksumIndex(asciiChars, start: message.length);
+      if (nextChecksum == null) {
+        if (message.length == 0) throw MillenniumUncompleteMessage();
+        throw MillenniumInvalidMessageException(nextChecksumIndex(asciiChars) + 2);
+      }
+      message = asciiChars.sublist(0, nextChecksum + 2);
 
-    _code = message[0];
-    _length = message.length;
-    _message = message;
+      if (checkChecksum(message)) {
+        _code = message[0];
+        _length = message.length;
+        _message = message;
+        return;
+      }
+    } while(true);
+    
   }
 
   static int genChecksumNum(List<String> message) {
@@ -59,9 +69,9 @@ class MillenniumMessage {
     return checksum == checksumSum;
   }
 
-  int nextChecksumIndex(List<String> chars) {
+  int nextChecksumIndex(List<String> chars, { int start = 0 }) {
     bool foundOneNum = false;
-    for (var i = 0; i < chars.length; i++) {
+    for (var i = start; i < chars.length; i++) {
       bool isNum = int.tryParse(chars[i]) != null;
       if (isNum && foundOneNum) return i - 1;
       if (isNum) foundOneNum = true;

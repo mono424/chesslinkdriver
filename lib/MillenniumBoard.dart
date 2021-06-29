@@ -4,6 +4,7 @@ import 'package:millenniumdriver/MillenniumMessage.dart';
 import 'package:millenniumdriver/protocol/commands/ExtinguishAllLeds.dart';
 import 'package:millenniumdriver/protocol/commands/GetStatus.dart';
 import 'package:millenniumdriver/protocol/commands/GetVersion.dart';
+import 'package:millenniumdriver/protocol/commands/Reset.dart';
 import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
 
 class MillenniumBoard {
@@ -101,13 +102,18 @@ class MillenniumBoard {
     else
       _buffer.addAll(chunk);
 
+    if (_buffer.length > 200) {
+      _buffer.removeRange(0, _buffer.length - 200);
+    }
+
     try {
       MillenniumMessage message = MillenniumMessage.parse(_buffer);
       _inputStreamController.add(message);
       _buffer.removeRange(0, message.getLength());
-      //print("Received valid message");
+      print("[IMessage] valid (" + message.getCode() + ")");
     } on MillenniumInvalidMessageException catch (e) {
       _buffer = skipBadBytes(e.skipBytes, _buffer);
+      print("[IMessage] invalid");
     } on MillenniumUncompleteMessage {
       // wait longer
     } catch (err) {
@@ -139,28 +145,40 @@ class MillenniumBoard {
     return ExtinguishAllLeds().send(_client);
   }
 
-  Future<void> toggleLed(String square) {
+  Future<void> turnOnSingleLed(String square, {Duration slotTime = const Duration(milliseconds: 500)}) {
     List<String> pattern = [];
     for (var i = 0; i < SQUARES.indexOf(square.toLowerCase()); i++) {
       pattern.add("00");
     }
     pattern.add("FF");
 
-    return SetLeds(pattern).send(_client);
+    return SetLeds(slotTime, pattern).send(_client);
   }
 
-  Future<void> toggleLeds(List<String> squares) {
+  Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500)}) {
+    List<String> pattern = [];
+    for (var i = 0; i < 81; i++) {
+      pattern.add("FF");
+    }
+    return SetLeds(slotTime, pattern).send(_client);
+  }
+
+  Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500)}) {
     List<String> pattern = [];
 
     for (var i = 0; i < SQUARES.length; i++) {
       pattern.add(squares.map((s) => s.toLowerCase()).toList().contains(SQUARES[i]) ? "FF" : "00");
     }
 
-    return SetLeds(pattern).send(_client);
+    return SetLeds(slotTime, pattern).send(_client);
   }
 
   Future<String> getVersion() {
     return GetVersion().request(_client, _inputStream);
+  }
+
+  Future<String> reset() {
+    return Reset().send(_client);
   }
 
 }
