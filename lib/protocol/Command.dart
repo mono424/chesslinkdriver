@@ -6,14 +6,14 @@ abstract class Command<T> {
   String code;
   Answer<T> answer;
 
-  Future<List<String>> messageBuilder() async {
-    return [code];
+  Future<String> messageBuilder() async {
+    return code;
   }
 
   Future<void> send(MillenniumCommunicationClient client) async {
-    List<String> messageString = await messageBuilder();
-    String parity = MillenniumMessage.genChecksumNum(messageString).toRadixString(16).padLeft(2, "0");
-    List<int> message = [...messageString, parity[0], parity[1]]
+    String messageString = await messageBuilder();
+    String checksum = MillenniumMessage.genChecksumNum(messageString).toRadixString(16).padLeft(2, "0");
+    List<int> message = [...messageString.split(''), checksum[0], checksum[1]]
       .map((c) => MillenniumMessage.setOddParityBit(c.codeUnits.first))
       .toList();
     

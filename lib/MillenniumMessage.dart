@@ -20,7 +20,7 @@ class MillenniumMessage {
       }
       message = asciiChars.sublist(0, nextChecksum + 2);
 
-      if (checkChecksum(message)) {
+      if (checkChecksum(message.join(""))) {
         _code = message[0];
         _length = message.length;
         _message = message;
@@ -30,7 +30,7 @@ class MillenniumMessage {
     
   }
 
-  static int genChecksumNum(List<String> message) {
+  static int genChecksumNum(String message) {
     int res = 0;
     for (var i = 0; i < message.length; i++) {
       res = res ^ (message[i].codeUnits.first & 127);
@@ -61,9 +61,9 @@ class MillenniumMessage {
     return odd == pBit;
   }
 
-  bool checkChecksum(List<String> message) {
-    String checksumHex = message.sublist(message.length - 2, message.length).join("");
-    int checksum = genChecksumNum(message.sublist(0, message.length - 2));
+  static bool checkChecksum(String message) {
+    String checksumHex = message.substring(message.length - 2, message.length);
+    int checksum = genChecksumNum(message.substring(0, message.length - 2));
     int checksumSum = int.parse(checksumHex, radix: 16);
 
     return checksum == checksumSum;

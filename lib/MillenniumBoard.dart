@@ -15,6 +15,7 @@ class MillenniumBoard {
   Stream<MillenniumMessage> _inputStream;
   List<int> _buffer;
 
+  static List<String> RANKS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   static const List<String> SQUARES = [
     "a8",
     "b8",
@@ -146,31 +147,15 @@ class MillenniumBoard {
   }
 
   Future<void> turnOnSingleLed(String square, {Duration slotTime = const Duration(milliseconds: 500)}) {
-    List<String> pattern = [];
-    for (var i = 0; i < SQUARES.indexOf(square.toLowerCase()); i++) {
-      pattern.add("00");
-    }
-    pattern.add("FF");
-
-    return SetLeds(slotTime, pattern).send(_client);
+    return SetLeds(slotTime, LEDPattern.singleSquare(square)).send(_client);
   }
 
   Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500)}) {
-    List<String> pattern = [];
-    for (var i = 0; i < 81; i++) {
-      pattern.add("FF");
-    }
-    return SetLeds(slotTime, pattern).send(_client);
+    return SetLeds(slotTime, LEDPattern.allLeds()).send(_client);
   }
 
   Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500)}) {
-    List<String> pattern = [];
-
-    for (var i = 0; i < SQUARES.length; i++) {
-      pattern.add(squares.map((s) => s.toLowerCase()).toList().contains(SQUARES[i]) ? "FF" : "00");
-    }
-
-    return SetLeds(slotTime, pattern).send(_client);
+    return SetLeds(slotTime, LEDPattern.manySquares(squares)).send(_client);
   }
 
   Future<String> getVersion() {

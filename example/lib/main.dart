@@ -212,6 +212,10 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text("Turn on LED's")
           ),
           TextButton(
+            onPressed: () => connectedBoard.turnOnSingleLed("D4"),
+            child: Text("Turn on D4 LED")
+          ),
+          TextButton(
             onPressed: () => connectedBoard.extinguishAllLeds(),
             child: Text("Turn off LED's")
           ),
