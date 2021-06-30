@@ -38,7 +38,8 @@ class LEDPattern {
     pattern = initializeNewPattern();
 
     for (int ledIndex in getSquareIndices(square)) {
-      pattern.replaceRange(ledIndex, ledIndex+1, hex.toUpperCase());
+      ledIndex = ledIndex * 2;
+      pattern = pattern.replaceRange(ledIndex, ledIndex+2, hex.toUpperCase());
     }
   }
 
@@ -47,7 +48,8 @@ class LEDPattern {
 
     for (String square in squares) {
       for (int ledIndex in getSquareIndices(square)) {
-        pattern.replaceRange(ledIndex, ledIndex+1, hex.toUpperCase());
+        ledIndex = ledIndex * 2;
+        pattern = pattern.replaceRange(ledIndex, ledIndex+2, hex.toUpperCase());
       }
     }
   }
@@ -73,14 +75,14 @@ class LEDPattern {
 
   // Example: LED1 LED2 LED10 LED11 = A8
   static List<int> getSquareIndices(String square) {
-    int rank = MillenniumBoard.RANKS.indexOf(square.substring(0, 1).toLowerCase());
-    int row = int.parse(square.substring(1, 2));
+    int rank = MillenniumBoard.RANKS.reversed.toList().indexOf(square.substring(0, 1).toLowerCase());
+    int row = MillenniumBoard.ROWS.indexOf(square.substring(1, 2));
 
     return [
-      rank * 8 + (8 - row),
-      rank * 8 + (8 - row + 1),
-      (rank * 8 + 1) + (8 - row),
-      (rank * 8 + 1) + (8 - row + 1)
+      rank * 9 + row,
+      rank * 9 + row + 1,
+      (rank + 1) * 9 + row,
+      (rank + 1) * 9 + row + 1
     ];
   }
 }

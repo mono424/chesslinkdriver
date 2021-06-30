@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_stateless_chessboard/flutter_stateless_chessboard.dart' as cb;
 import 'package:millenniumdriver/MillenniumCommunicationClient.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice _port;
   BluetoothCharacteristic _characteristicRead;
   BluetoothCharacteristic _characteristicWrite;
+  Timer updateSquareLedTimer;
 
 
   String version;
@@ -100,6 +103,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // // set board to update mode
     // nBoard.setBoardToUpdateMode();
+
+    updateSquareLedTimer = Timer.periodic(Duration(milliseconds: 200), (t) => lightChangeSquare());
   }
 
   void getVersion() async {
@@ -110,6 +115,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void disconnect() async {
+    if (updateSquareLedTimer != null) {
+      updateSquareLedTimer.cancel();
+      updateSquareLedTimer = null;
+    }
     _port.disconnect();
     _port = null;
     setState(() {
@@ -117,34 +126,33 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Map<String, String> board;
   Map<String, String> oldBoard;
-  bool lightChangeSquareBlock = false;
-  void lightChangeSquare(Map<String, String> board) async {
-    if (lightChangeSquareBlock) {
-      oldBoard = board;
+  void lightChangeSquare() async {
+    if (board == null) {
       return;
     }
-    lightChangeSquareBlock = true;
     List<String> squares = [];
     if (oldBoard != null) {
       for (String sq in board.keys) {
-        if (board[sq] != oldBoard[sq]) squares.add(sq);
+        bool hasPiece = board[sq] != null;
+        bool isNew = board[sq] != oldBoard[sq];
+        if (hasPiece && isNew) squares.add(sq);
       }
     }
     oldBoard = board;
     if (squares.length > 0) {
       await connectedBoard.turnOnLeds(squares);
     }
-    Future.delayed(Duration(seconds: 1), () => (lightChangeSquareBlock = false));
   }
 
   String boardToFen(Map<String, String> board) {
     String res = "";
-    List<String> values = board.values.toList().reversed.toList();
     for (var i = 0; i < 8; i++) {
       int free = 0;
       for (var j = 0; j < 8; j++) {
-        String piece = values[i * 8 + j];
+        String square = MillenniumBoard.RANKS[j] + MillenniumBoard.ROWS[i];
+        String piece = board[square];
         if (piece == null) {
           free++;
         } else {
@@ -190,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context, AsyncSnapshot<Map<String, String>> snapshot) {
                 if (!snapshot.hasData) return Text("-");
 
-                lightChangeSquare(snapshot.data);
+                board = snapshot.data;
                 String fen = boardToFen(snapshot.data);
 
                 return cb.Chessboard(
@@ -212,8 +220,8 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text("Turn on LED's")
           ),
           TextButton(
-            onPressed: () => connectedBoard.turnOnSingleLed("D4"),
-            child: Text("Turn on D4 LED")
+            onPressed: () => connectedBoard.turnOnSingleLed("A1"),
+            child: Text("Turn on A1 LED")
           ),
           TextButton(
             onPressed: () => connectedBoard.extinguishAllLeds(),
