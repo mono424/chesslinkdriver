@@ -7,6 +7,7 @@ import 'package:millenniumdriver/protocol/commands/GetVersion.dart';
 import 'package:millenniumdriver/protocol/commands/Reset.dart';
 import 'package:millenniumdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
+import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
 
 class MillenniumBoard {
   
@@ -101,6 +102,10 @@ class MillenniumBoard {
 
   Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500)}) {
     return SetLeds(slotTime, LEDPattern.manySquares(squares)).send(_client);
+  }
+
+  Future<void> setLeds(LEDPattern ledPattern, {Duration slotTime = const Duration(milliseconds: 500)}) {
+    return SetLeds(slotTime, ledPattern).send(_client);
   }
 
   Future<String> getVersion() {

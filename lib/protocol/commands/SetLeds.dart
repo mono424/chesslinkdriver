@@ -1,7 +1,7 @@
-import 'package:millenniumdriver/MillenniumBoard.dart';
 import 'package:millenniumdriver/MillenniumMessage.dart';
 import 'package:millenniumdriver/protocol/Answer.dart';
 import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
 
 class SetLeds extends Command<void> {
   final String code = "L";
@@ -28,61 +28,4 @@ class SetLedsAck extends Answer<void> {
 
   @override
   void process(String msg) {}
-}
-
-class LEDPattern {
-
-  String pattern;
-
-  LEDPattern.singleSquare(String square, { String hex = "FF" }) {
-    pattern = initializeNewPattern();
-
-    for (int ledIndex in getSquareIndices(square)) {
-      ledIndex = ledIndex * 2;
-      pattern = pattern.replaceRange(ledIndex, ledIndex+2, hex.toUpperCase());
-    }
-  }
-
-  LEDPattern.manySquares(List<String> squares, { String hex = "FF" }) {
-    pattern = initializeNewPattern();
-
-    for (String square in squares) {
-      for (int ledIndex in getSquareIndices(square)) {
-        ledIndex = ledIndex * 2;
-        pattern = pattern.replaceRange(ledIndex, ledIndex+2, hex.toUpperCase());
-      }
-    }
-  }
-
-  LEDPattern.allLeds({ String hex = "FF" }) {
-    pattern = initializeNewPattern(hex: hex);
-  }
-
-  @override
-  String toString() {
-    return pattern;
-  }
-
-  static String initializeNewPattern({ String hex = "00" }) {
-    String res = "";
-
-    for (var i = 0; i < 81; i++) {
-      res += hex;
-    }
-
-    return res;
-  }
-
-  // Example: LED1 LED2 LED10 LED11 = A8
-  static List<int> getSquareIndices(String square) {
-    int rank = MillenniumBoard.RANKS.reversed.toList().indexOf(square.substring(0, 1).toLowerCase());
-    int row = MillenniumBoard.ROWS.indexOf(square.substring(1, 2));
-
-    return [
-      rank * 9 + row,
-      rank * 9 + row + 1,
-      (rank + 1) * 9 + row,
-      (rank + 1) * 9 + row + 1
-    ];
-  }
 }
