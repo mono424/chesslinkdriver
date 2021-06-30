@@ -36,14 +36,14 @@ class LEDPattern {
 
   static String generateSquarePattern(bool s8, bool s7, bool s6, bool s5, bool s4, bool s3, bool s2, bool s1) {
     int num = 0;
-    if (s1) num &= 1;
-    if (s2) num &= 2;
-    if (s3) num &= 4;
-    if (s4) num &= 8;
-    if (s5) num &= 16;
-    if (s6) num &= 32;
-    if (s7) num &= 64;
-    if (s8) num &= 128;
+    if (s1) num ^= 1;
+    if (s2) num ^= 2;
+    if (s3) num ^= 4;
+    if (s4) num ^= 8;
+    if (s5) num ^= 16;
+    if (s6) num ^= 32;
+    if (s7) num ^= 64;
+    if (s8) num ^= 128;
     return MillenniumMessage.numToHex(num);
   }
 

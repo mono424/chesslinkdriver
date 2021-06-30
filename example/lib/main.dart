@@ -5,6 +5,7 @@ import 'package:millenniumdriver/MillenniumCommunicationClient.dart';
 import 'package:flutter/material.dart';
 import 'package:millenniumdriver/MillenniumBoard.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
 
 void main() {
   runApp(MyApp());
@@ -114,6 +115,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void setLedPatternB1ToC3() async {
+    LEDPattern ledPattern = LEDPattern();
+    ledPattern.set("B1", LEDPattern.generateSquarePattern(true, true, true, true, false, false, false, false));
+    ledPattern.set("C3", LEDPattern.generateSquarePattern(false, false, false, false, true, true, true, true));
+    connectedBoard.setLeds(ledPattern, slotTime: Duration(milliseconds: 100));
+  }
+
   void disconnect() async {
     if (updateSquareLedTimer != null) {
       updateSquareLedTimer.cancel();
@@ -219,9 +227,18 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () => connectedBoard.turnOnAllLeds(),
             child: Text("Turn on LED's")
           ),
-          TextButton(
-            onPressed: () => connectedBoard.turnOnSingleLed("A1"),
-            child: Text("Turn on A1 LED")
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: setLedPatternB1ToC3,
+                child: Text("Turn on B1 -> C3")
+              ),
+              TextButton(
+                onPressed: () => connectedBoard.turnOnSingleLed("A1"),
+                child: Text("Turn on A1 LED")
+              ),
+            ],
           ),
           TextButton(
             onPressed: () => connectedBoard.extinguishAllLeds(),
