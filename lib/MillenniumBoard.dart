@@ -108,6 +108,10 @@ class MillenniumBoard {
     return SetLeds(slotTime, ledPattern).send(_client);
   }
 
+    Future<Map<String, String>> getStatus() {
+    return GetStatus().request(_client, _inputStream);
+  }
+
   Future<String> getVersion() {
     return GetVersion().request(_client, _inputStream);
   }
