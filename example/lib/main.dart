@@ -151,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var i = 0; i < 8; i++) {
       int free = 0;
       for (var j = 0; j < 8; j++) {
-        String square = MillenniumBoard.RANKS[j] + MillenniumBoard.ROWS[i];
+        String square = MillenniumBoard.RANKS.reversed.elementAt(j) + MillenniumBoard.ROWS[i];
         String piece = board[square];
         if (piece == null) {
           free++;
