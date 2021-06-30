@@ -1,7 +1,7 @@
 class MillenniumMessage {
   String _code;
   int _length;
-  List<String> _message;
+  String _message;
 
   MillenniumMessage.parse(List<int> buffer) {
     int firstParityFail = buffer.firstWhere(((b) => !checkOddParityBit(b)), orElse: () => null);
@@ -20,14 +20,19 @@ class MillenniumMessage {
       }
       message = asciiChars.sublist(0, nextChecksum + 2);
 
-      if (checkChecksum(message.join(""))) {
+      String messageString = message.join("");
+      if (checkChecksum(messageString)) {
         _code = message[0];
         _length = message.length;
-        _message = message;
+        _message = messageString;
         return;
       }
     } while(true);
     
+  }
+
+  bool checkCode(String code) {
+    return (_message.length >= code.length && _message.substring(0, code.length) == code);
   }
 
   static int genChecksumNum(String message) {
@@ -69,10 +74,14 @@ class MillenniumMessage {
     return checksum == checksumSum;
   }
 
+  static String numToHex(int num) {
+    return num.toRadixString(16).padLeft(2, "0").toUpperCase();
+  }
+
   int nextChecksumIndex(List<String> chars, { int start = 0 }) {
     bool foundOneNum = false;
     for (var i = start; i < chars.length; i++) {
-      bool isNum = int.tryParse(chars[i]) != null;
+      bool isNum = int.tryParse(chars[i], radix: 16) != null;
       if (isNum && foundOneNum) return i - 1;
       if (isNum) foundOneNum = true;
       else foundOneNum = false;
@@ -88,7 +97,7 @@ class MillenniumMessage {
     return _length;
   }
 
-  List<String> getMessage() {
+  String getMessage() {
     return _message;
   }
 }

@@ -11,7 +11,7 @@ class GetStatusAnswer extends Answer<Map<String,String>> {
   final String code = "s";
 
   @override
-  Map<String,String> process(List<String> msg) {
+  Map<String,String> process(String msg) {
     Map<String,String> board = Map<String,String>();
     for (var i = 0; i < MillenniumBoard.SQUARES.length; i++) {
       String piece = msg[i + 1];

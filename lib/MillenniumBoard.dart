@@ -5,6 +5,7 @@ import 'package:millenniumdriver/protocol/commands/ExtinguishAllLeds.dart';
 import 'package:millenniumdriver/protocol/commands/GetStatus.dart';
 import 'package:millenniumdriver/protocol/commands/GetVersion.dart';
 import 'package:millenniumdriver/protocol/commands/Reset.dart';
+import 'package:millenniumdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
 
 class MillenniumBoard {
@@ -164,6 +165,10 @@ class MillenniumBoard {
 
   Future<String> reset() {
     return Reset().send(_client);
+  }
+
+  Future<String> setLedBrightness(double level) {
+    return SetLedBrightness(level).send(_client);
   }
 
 }

@@ -12,7 +12,7 @@ abstract class Command<T> {
 
   Future<void> send(MillenniumCommunicationClient client) async {
     String messageString = await messageBuilder();
-    String checksum = MillenniumMessage.genChecksumNum(messageString).toRadixString(16).padLeft(2, "0");
+    String checksum = MillenniumMessage.numToHex(MillenniumMessage.genChecksumNum(messageString));
     List<int> message = [...messageString.split(''), checksum[0], checksum[1]]
       .map((c) => MillenniumMessage.setOddParityBit(c.codeUnits.first))
       .toList();
@@ -29,7 +29,7 @@ abstract class Command<T> {
   Future<T> getReponse(Stream<MillenniumMessage> inputStream) async {
     if (answer == null) return null;
     MillenniumMessage message = await inputStream
-        .firstWhere((MillenniumMessage msg) => msg.getCode() == answer.code);
+        .firstWhere((MillenniumMessage msg) => msg.checkCode(answer.code));
     return answer.process(message.getMessage());
   }
 }

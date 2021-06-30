@@ -1,4 +1,5 @@
 import 'package:millenniumdriver/MillenniumBoard.dart';
+import 'package:millenniumdriver/MillenniumMessage.dart';
 import 'package:millenniumdriver/protocol/Answer.dart';
 import 'package:millenniumdriver/protocol/Command.dart';
 
@@ -14,7 +15,7 @@ class SetLeds extends Command<void> {
 
   String slotTimeHex() {
     int mul = slotTime.inMilliseconds ~/ 4.096;
-    return mul.toRadixString(16).padLeft(2, "0").toUpperCase();
+    return MillenniumMessage.numToHex(mul);
   }
 
   Future<String> messageBuilder() async {
@@ -26,7 +27,7 @@ class SetLedsAck extends Answer<void> {
   final String code = "l";
 
   @override
-  void process(List<String> msg) {}
+  void process(String msg) {}
 }
 
 class LEDPattern {

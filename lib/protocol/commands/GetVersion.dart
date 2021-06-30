@@ -10,9 +10,9 @@ class GetVersionAnswer extends Answer<String> {
   final String code = "v";
 
   @override
-  String process(List<String> msg) {
-    String versionHighHex = msg[1];
-    String versionLowHex = msg[2];
+  String process(String msg) {
+    String versionHighHex = msg.substring(1, 3);
+    String versionLowHex = msg.substring(3, 5);
     return int.parse(versionHighHex, radix: 16).toString() + "." + int.parse(versionLowHex, radix: 16).toString();
   }
 }
