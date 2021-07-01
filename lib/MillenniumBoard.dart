@@ -100,8 +100,8 @@ class MillenniumBoard {
     return SetLeds(slotTime, LEDPattern.singleSquare(square)).send(_client);
   }
 
-  Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500)}) {
-    return SetLeds(slotTime, LEDPattern.allLeds()).send(_client);
+  Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500), String pattern = "ff"}) {
+    return SetLeds(slotTime, LEDPattern.allLeds(hex: pattern)).send(_client);
   }
 
   Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500)}) {
@@ -120,7 +120,7 @@ class MillenniumBoard {
     return GetVersion().request(_client, _inputStream);
   }
 
-  Future<String> reset() {
+  Future<void> reset() {
     return Reset().send(_client);
   }
 

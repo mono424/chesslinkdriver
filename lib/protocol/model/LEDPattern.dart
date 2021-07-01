@@ -13,6 +13,18 @@ class LEDPattern {
     pattern = _setSquareInFullPattern(pattern, square, squarePattern);
   }
 
+  void setRank(int rank, String squarePattern) {
+    for (var file in MillenniumBoard.RANKS) {
+      pattern = _setSquareInFullPattern(pattern, file + rank.toString(), squarePattern);
+    }
+  }
+
+  void setFile(String file, String squarePattern) {
+    for (var rank in MillenniumBoard.ROWS) {
+      pattern = _setSquareInFullPattern(pattern, file + rank, squarePattern);
+    }
+  }
+
   LEDPattern.singleSquare(String square, { String hex = "FF" }) {
     pattern = _setSquareInFullPattern(initializeNewPattern(), square, hex);
   }
@@ -45,6 +57,19 @@ class LEDPattern {
     if (s7) num ^= 64;
     if (s8) num ^= 128;
     return MillenniumMessage.numToHex(num);
+  }
+
+  static String generateSquarePatternN(int s8, int s7, int s6, int s5, int s4, int s3, int s2, int s1) {
+    return generateSquarePattern(
+      (s1 > 0),
+      (s2 > 0),
+      (s3 > 0),
+      (s4 > 0),
+      (s5 > 0),
+      (s6 > 0),
+      (s7 > 0),
+      (s8 > 0),
+    );
   }
 
   static String initializeNewPattern({ String hex = "00" }) {
