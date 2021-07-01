@@ -16,6 +16,7 @@ class MillenniumBoard {
   StreamController _inputStreamController;
   Stream<MillenniumMessage> _inputStream;
   List<int> _buffer;
+  String _version;
 
   static List<String> RANKS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   static List<String> ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -29,6 +30,8 @@ class MillenniumBoard {
     return squares;
   }
 
+  get version => _version;
+
   MillenniumBoard();
 
   Future<void> init(MillenniumCommunicationClient client, { Duration initialDelay = const Duration(milliseconds: 300) }) async {
@@ -39,8 +42,9 @@ class MillenniumBoard {
     _inputStream = _inputStreamController.stream.asBroadcastStream();
 
     await Future.delayed(initialDelay);
-  }
 
+    _version = await getVersion();
+  }
 
   void _handleInputStream(List<int> chunk) {
     //print("> " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
