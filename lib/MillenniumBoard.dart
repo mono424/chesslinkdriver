@@ -8,6 +8,7 @@ import 'package:millenniumdriver/protocol/commands/Reset.dart';
 import 'package:millenniumdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
 import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
+import 'package:millenniumdriver/protocol/model/RequestConfig.dart';
 
 class MillenniumBoard {
   
@@ -92,40 +93,40 @@ class MillenniumBoard {
         .map((MillenniumMessage msg) => GetStatusAnswer().process(msg.getMessage()));
   }
 
-  Future<void> extinguishAllLeds() {
-    return ExtinguishAllLeds().send(_client);
+  Future<void> extinguishAllLeds({ RequestConfig config = const RequestConfig() }) {
+    return ExtinguishAllLeds().request(_client, _inputStream, config);
   }
 
-  Future<void> turnOnSingleLed(String square, {Duration slotTime = const Duration(milliseconds: 500)}) {
-    return SetLeds(slotTime, LEDPattern.singleSquare(square)).send(_client);
+  Future<void> turnOnSingleLed(String square, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    return SetLeds(slotTime, LEDPattern.singleSquare(square)).request(_client, _inputStream, config);
   }
 
-  Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500), String pattern = "ff"}) {
-    return SetLeds(slotTime, LEDPattern.allLeds(hex: pattern)).send(_client);
+  Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500), String pattern = "ff", RequestConfig config = const RequestConfig()}) {
+    return SetLeds(slotTime, LEDPattern.allLeds(hex: pattern)).request(_client, _inputStream, config);
   }
 
-  Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500)}) {
-    return SetLeds(slotTime, LEDPattern.manySquares(squares)).send(_client);
+  Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    return SetLeds(slotTime, LEDPattern.manySquares(squares)).request(_client, _inputStream, config);
   }
 
-  Future<void> setLeds(LEDPattern ledPattern, {Duration slotTime = const Duration(milliseconds: 500)}) {
-    return SetLeds(slotTime, ledPattern).send(_client);
+  Future<void> setLeds(LEDPattern ledPattern, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    return SetLeds(slotTime, ledPattern).request(_client, _inputStream, config);
   }
 
-    Future<Map<String, String>> getStatus() {
+    Future<Map<String, String>> getStatus({ RequestConfig config = const RequestConfig() }) {
     return GetStatus().request(_client, _inputStream);
   }
 
-  Future<String> getVersion() {
-    return GetVersion().request(_client, _inputStream);
+  Future<String> getVersion({ RequestConfig config = const RequestConfig() }) {
+    return GetVersion().request(_client, _inputStream, config);
   }
 
   Future<void> reset() {
     return Reset().send(_client);
   }
 
-  Future<String> setLedBrightness(double level) {
-    return SetLedBrightness(level).send(_client);
+  Future<String> setLedBrightness(double level, { RequestConfig config = const RequestConfig() }) {
+    return SetLedBrightness(level).request(_client, _inputStream, config);
   }
 
 }
