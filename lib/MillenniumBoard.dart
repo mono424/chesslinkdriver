@@ -62,10 +62,10 @@ class MillenniumBoard {
       MillenniumMessage message = MillenniumMessage.parse(_buffer);
       _inputStreamController.add(message);
       _buffer.removeRange(0, message.getLength());
-      print("[IMessage] valid (" + message.getCode() + ")");
+      //print("[IMessage] valid (" + message.getCode() + ")");
     } on MillenniumInvalidMessageException catch (e) {
       _buffer = skipBadBytes(e.skipBytes, _buffer);
-      print("[IMessage] invalid");
+      //print("[IMessage] invalid");
     } on MillenniumUncompleteMessage {
       // wait longer
     } catch (err) {
@@ -83,7 +83,7 @@ class MillenniumBoard {
       if ((buffer[startOfGoodBytes] & 0x80) != 0) break;
     }
     if (startOfGoodBytes == buffer.length) return [];
-    return buffer.sublist(startOfGoodBytes, buffer.length - startOfGoodBytes);
+    return buffer.sublist(startOfGoodBytes, buffer.length);
   }
 
   Stream<Map<String, String>> getBoardUpdateStream() {
