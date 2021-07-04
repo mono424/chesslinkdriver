@@ -54,36 +54,35 @@ class MillenniumBoard {
     else
       _buffer.addAll(chunk);
 
-    if (_buffer.length > 200) {
-      _buffer.removeRange(0, _buffer.length - 200);
+    if (_buffer.length > 1000) {
+      _buffer.removeRange(0, _buffer.length - 1000);
     }
 
-    try {
-      MillenniumMessage message = MillenniumMessage.parse(_buffer);
-      _inputStreamController.add(message);
-      _buffer.removeRange(0, message.getLength());
-      //print("[IMessage] valid (" + message.getCode() + ")");
-    } on MillenniumInvalidMessageException catch (e) {
-      _buffer = skipBadBytes(e.skipBytes, _buffer);
-      //print("[IMessage] invalid");
-    } on MillenniumUncompleteMessage {
-      // wait longer
-    } catch (err) {
-      //print("Unknown parse-error: " + err.toString());
-    }
+    do {
+      try {
+        MillenniumMessage message = MillenniumMessage.parse(_buffer);
+        _inputStreamController.add(message);
+        _buffer.removeRange(0, message.getLength());
+        //print("[IMessage] valid (" + message.getCode() + ")");
+      } on MillenniumInvalidMessageException catch (e) {
+        skipBadBytes(e.skipBytes, _buffer);
+        //print("[IMessage] invalid");
+      } on MillenniumUncompleteMessage {
+        // wait longer
+        break;
+      } catch (err) {
+        //print("Unknown parse-error: " + err.toString());
+        break;
+      }
+    } while (_buffer.length > 0);
   }
 
   Stream<MillenniumMessage> getInputStream() {
     return _inputStream;
   }
 
-  List<int> skipBadBytes(int start, List<int> buffer) {
-    int startOfGoodBytes = start;
-    for (; startOfGoodBytes < buffer.length; startOfGoodBytes++) {
-      if ((buffer[startOfGoodBytes] & 0x80) != 0) break;
-    }
-    if (startOfGoodBytes == buffer.length) return [];
-    return buffer.sublist(startOfGoodBytes, buffer.length);
+  void skipBadBytes(int start, List<int> buffer) {
+    buffer.removeRange(0, start);
   }
 
   Stream<Map<String, String>> getBoardUpdateStream() {
