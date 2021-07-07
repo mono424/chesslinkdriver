@@ -307,6 +307,25 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text("full(1)")
             ),
           ],
+        ),
+        SizedBox(height: 25),
+        Text("setScanTime"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 31)),
+              child: Text("32 Scans/Sec")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 41)),
+              child: Text("24.4 Scans/Sec")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 523)),
+              child: Text("1.9 Scans/Sec")
+            ),
+          ],
         )
       ],
     );

@@ -128,7 +128,7 @@ class MillenniumBoard {
     return GetStatus().request(_client, _inputStream);
   }
 
-  Future<Map<String, String>> setScanTime(Duration time, { RequestConfig config = const RequestConfig() }) {
+  Future<void> setScanTime(Duration time, { RequestConfig config = const RequestConfig() }) {
     return SetScanTime(time).request(_client, _inputStream);
   }
 
