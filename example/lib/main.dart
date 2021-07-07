@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:millenniumdriver/MillenniumBoard.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
+import 'package:millenniumdriver/protocol/model/StatusReportSendInterval.dart';
 
 void main() {
   runApp(MyApp());
@@ -179,29 +180,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return res.substring(0, res.length - 1) + ' w KQkq - 0 1';
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("millenniumdriver example"),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(child: scanning ? CircularProgressIndicator() : TextButton(
-            child: Text(connectedBoard == null ? "List Devices" : "Connected"),
-            onPressed: connectedBoard == null ? listDevices : null,
-          )),
-          (
-            connectedBoard == null ? Flexible( child: ListView.builder(
-              itemCount: devices.length,
-              itemBuilder: (context, index) => ListTile(
-                title: Text(devices[index].device.name),
-                subtitle: Text(devices[index].device.id.id),
-                onTap: () => connect(devices[index].device),
-              )
-            )) : Center( child: StreamBuilder(
+  Widget connectedBoardButtons() {
+    return Column(
+      children: [
+        SizedBox(height: 25),
+        Center(
+          child: StreamBuilder(
             stream: connectedBoard?.getBoardUpdateStream(),
               builder: (context, AsyncSnapshot<Map<String, String>> snapshot) {
                 if (!snapshot.hasData) return Text("-");
@@ -217,44 +201,171 @@ class _MyHomePageState extends State<MyHomePage> {
                   darkSquareColor: Color.fromRGBO(181, 136, 99, 1), // optional
                 );
               }
-            ))
-          ),
-          TextButton(
-            onPressed: getVersion,
-            child: Text("Get Version (" + (version ?? "_") + ")")
-          ),
-          TextButton(
-            onPressed: () => connectedBoard.turnOnAllLeds(),
-            child: Text("Turn on LED's")
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: setLedPatternB1ToC3,
-                child: Text("Turn on B1 -> C3")
-              ),
-              TextButton(
-                onPressed: () => connectedBoard.turnOnSingleLed("A1"),
-                child: Text("Turn on A1 LED")
-              ),
-            ],
-          ),
-          TextButton(
-            onPressed: () => connectedBoard.extinguishAllLeds(),
-            child: Text("Turn off LED's")
-          ),
-          TextButton(
-            onPressed: () => connectedBoard.reset(),
-            child: Text("Reset")
-          ),
-          TextButton(
-            onPressed: disconnect,
-            child: Text("Disconnect")
-          ),
-          SizedBox(height: 24)
+          )
+        ),
+        TextButton(
+          onPressed: getVersion,
+          child: Text("Get Version (" + (version ?? "_") + ")")
+        ),
+        TextButton(
+          onPressed: () => connectedBoard.turnOnAllLeds(),
+          child: Text("Turn on LED's")
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: setLedPatternB1ToC3,
+              child: Text("Turn on B1 -> C3")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.turnOnSingleLed("A1"),
+              child: Text("Turn on A1 LED")
+            ),
+          ],
+        ),
+        TextButton(
+          onPressed: () => connectedBoard.extinguishAllLeds(),
+          child: Text("Turn off LED's")
+        ),
+        TextButton(
+          onPressed: () => connectedBoard.getStatus(),
+          child: Text("Get Board")
+        ),
+        TextButton(
+          onPressed: () => connectedBoard.reset(),
+          child: Text("Reset")
+        ),
+        TextButton(
+          onPressed: disconnect,
+          child: Text("Disconnect")
+        ),
+      ],
+    );
+  }
+
+  Widget additionalSettings() {
+    return Column(
+      children: [
+        SizedBox(height: 25),
+        Text("SetAutomaticReports"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.disabled),
+              child: Text("disabled")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.onEveryScan),
+              child: Text("onEveryScan")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.onChange),
+              child: Text("onChange")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.withSetTime),
+              child: Text("withSetTime")
+            ),
+          ],
+        ),
+        SizedBox(height: 25),
+        Text("SetAutomaticReportsTime"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(milliseconds: 200)),
+              child: Text("200ms")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(milliseconds: 500)),
+              child: Text("500ms")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(seconds: 1)),
+              child: Text("1s")
+            ),
+          ],
+        ),
+        SizedBox(height: 25),
+        Text("SetBrightness"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () => connectedBoard.setLedBrightness(0),
+              child: Text("dim(0)")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setLedBrightness(0.5),
+              child: Text("middle(0.5)")
+            ),
+            TextButton(
+              onPressed: () => connectedBoard.setLedBrightness(1),
+              child: Text("full(1)")
+            ),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget deivceList() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(height: 25),
+        Center(child: scanning ? CircularProgressIndicator() : TextButton(
+          child: Text("List Devices"),
+          onPressed: listDevices,
+        )),
+
+        Flexible( child: ListView.builder(
+          itemCount: devices.length,
+          itemBuilder: (context, index) => ListTile(
+            title: Text(devices[index].device.name),
+            subtitle: Text(devices[index].device.id.id),
+            onTap: () => connect(devices[index].device),
+          )
+        )),
+        
+        SizedBox(height: 24)
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = connectedBoard == null 
+      ? deivceList() : TabBarView(
+        children: [
+          connectedBoardButtons(),
+          additionalSettings(),
         ],
-      ),
+      );
+    Widget appBar = connectedBoard == null 
+      ? AppBar(
+        title: Text("millenniumdriver example"),
+      ) : AppBar(
+          title: Text("millenniumdriver example"),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: "Overview"),
+              Tab(text: "Additional"),
+            ],
+        ),
+      );
+
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: appBar,
+        body: content
+      )
     );
   }
 }

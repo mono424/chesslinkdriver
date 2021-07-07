@@ -5,10 +5,14 @@ import 'package:millenniumdriver/protocol/commands/ExtinguishAllLeds.dart';
 import 'package:millenniumdriver/protocol/commands/GetStatus.dart';
 import 'package:millenniumdriver/protocol/commands/GetVersion.dart';
 import 'package:millenniumdriver/protocol/commands/Reset.dart';
+import 'package:millenniumdriver/protocol/commands/SetAutomaticReports.dart';
+import 'package:millenniumdriver/protocol/commands/SetAutomaticReportsTime.dart';
 import 'package:millenniumdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
+import 'package:millenniumdriver/protocol/commands/SetScanTime.dart';
 import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
 import 'package:millenniumdriver/protocol/model/RequestConfig.dart';
+import 'package:millenniumdriver/protocol/model/StatusReportSendInterval.dart';
 
 class MillenniumBoard {
   
@@ -112,8 +116,20 @@ class MillenniumBoard {
     return SetLeds(slotTime, ledPattern).request(_client, _inputStream, config);
   }
 
-    Future<Map<String, String>> getStatus({ RequestConfig config = const RequestConfig() }) {
+  Future<void> setAutomaticReports(StatusReportSendInterval interval, {RequestConfig config = const RequestConfig()}) {
+    return SetAutomaticReports(interval).request(_client, _inputStream, config);
+  }
+
+  Future<void> setAutomaticReportsTime(Duration time, {RequestConfig config = const RequestConfig()}) {
+    return SetAutomaticReportsTime(time).request(_client, _inputStream, config);
+  }
+
+  Future<Map<String, String>> getStatus({ RequestConfig config = const RequestConfig() }) {
     return GetStatus().request(_client, _inputStream);
+  }
+
+  Future<Map<String, String>> setScanTime(Duration time, { RequestConfig config = const RequestConfig() }) {
+    return SetScanTime(time).request(_client, _inputStream);
   }
 
   Future<String> getVersion({ RequestConfig config = const RequestConfig() }) {
@@ -124,7 +140,7 @@ class MillenniumBoard {
     return Reset().send(_client);
   }
 
-  Future<String> setLedBrightness(double level, { RequestConfig config = const RequestConfig() }) {
+  Future<void> setLedBrightness(double level, { RequestConfig config = const RequestConfig() }) {
     return SetLedBrightness(level).request(_client, _inputStream, config);
   }
 

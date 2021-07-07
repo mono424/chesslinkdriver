@@ -12,7 +12,7 @@ class SetLedBrightness extends Command<void> {
   SetLedBrightness(this.level);
 
   Future<String> messageBuilder() async {
-    return code + MillenniumMessage.numToHex((level * 15).round());
+    return code + MillenniumMessage.numToHex((level * 14).round());
   }
 }
 
