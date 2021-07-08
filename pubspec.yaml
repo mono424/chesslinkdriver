@@ -1,7 +1,7 @@
-name: millenniumdriver
-description: A Millennium-Chessboard Driver written in pure Dart
+name: chesslinkdriver
+description: A ChessLink ChessLink-Chessboard Driver written in pure Dart
 version: 0.0.1
-repository: https://github.com/mono424/millenniumdriver
+repository: https://github.com/mono424/chesslinkdriver
 
 environment:
   sdk: ">=2.7.0 <3.0.0"

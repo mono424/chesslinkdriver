@@ -1,6 +1,6 @@
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
 
 class SetAutomaticReportsTime extends Command<void> {
   final String code = "W03";
@@ -13,7 +13,7 @@ class SetAutomaticReportsTime extends Command<void> {
   Future<String> messageBuilder() async {
     int mul = time.inMilliseconds ~/ 4.096;
     if (mul > 255) mul = 255;
-    return code + MillenniumMessage.numToHex(mul);
+    return code + ChessLinkMessage.numToHex(mul);
   }
 }
 

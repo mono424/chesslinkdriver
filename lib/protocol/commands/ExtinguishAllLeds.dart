@@ -1,5 +1,5 @@
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
 
 class ExtinguishAllLeds extends Command<void> {
   final String code = "X";

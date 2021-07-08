@@ -1,11 +1,11 @@
-class MillenniumMessage {
+class ChessLinkMessage {
   String _code;
   int _length;
   String _message;
 
-  MillenniumMessage.parse(List<int> buffer) {
+  ChessLinkMessage.parse(List<int> buffer) {
     int firstParityFail = buffer.firstWhere(((b) => !checkOddParityBit(b)), orElse: () => null);
-    if (firstParityFail != null) throw MillenniumInvalidMessageException(firstParityFail + 1);
+    if (firstParityFail != null) throw ChessLinkInvalidMessageException(firstParityFail + 1);
 
     List<String> asciiChars = buffer.map((n) => String.fromCharCode(n & 127)).toList();
 
@@ -15,8 +15,8 @@ class MillenniumMessage {
     do {
       nextChecksum = nextChecksumIndex(asciiChars, start: message.length);
       if (nextChecksum == null) {
-        if (message.length == 0) throw MillenniumUncompleteMessage();
-        throw MillenniumInvalidMessageException(nextChecksumIndex(asciiChars) + 2);
+        if (message.length == 0) throw ChessLinkUncompleteMessage();
+        throw ChessLinkInvalidMessageException(nextChecksumIndex(asciiChars) + 2);
       }
       message = asciiChars.sublist(0, nextChecksum + 2);
 
@@ -102,9 +102,9 @@ class MillenniumMessage {
   }
 }
 
-class MillenniumUncompleteMessage implements Exception {}
-class MillenniumInvalidMessageException implements Exception {
+class ChessLinkUncompleteMessage implements Exception {}
+class ChessLinkInvalidMessageException implements Exception {
   final int skipBytes;
 
-  MillenniumInvalidMessageException(this.skipBytes);
+  ChessLinkInvalidMessageException(this.skipBytes);
 }

@@ -1,7 +1,7 @@
-import 'package:millenniumdriver/MillenniumCommunicationClient.dart';
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/model/RequestConfig.dart';
+import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/model/RequestConfig.dart';
 
 abstract class Command<T> {
   String code;
@@ -11,19 +11,19 @@ abstract class Command<T> {
     return code;
   }
 
-  Future<void> send(MillenniumCommunicationClient client) async {
+  Future<void> send(ChessLinkCommunicationClient client) async {
     String messageString = await messageBuilder();
-    String checksum = MillenniumMessage.numToHex(MillenniumMessage.genChecksumNum(messageString));
+    String checksum = ChessLinkMessage.numToHex(ChessLinkMessage.genChecksumNum(messageString));
     List<int> message = [...messageString.split(''), checksum[0], checksum[1]]
-      .map((c) => MillenniumMessage.setOddParityBit(c.codeUnits.first))
+      .map((c) => ChessLinkMessage.setOddParityBit(c.codeUnits.first))
       .toList();
     
     await client.send(message);
   }
 
   Future<T> request(
-    MillenniumCommunicationClient client,
-    Stream<MillenniumMessage> inputStream,
+    ChessLinkCommunicationClient client,
+    Stream<ChessLinkMessage> inputStream,
     [RequestConfig config = const RequestConfig()]
   ) async {
     Future<T> result = getReponse(inputStream);
@@ -40,10 +40,10 @@ abstract class Command<T> {
     }
   }
 
-  Future<T> getReponse(Stream<MillenniumMessage> inputStream) async {
+  Future<T> getReponse(Stream<ChessLinkMessage> inputStream) async {
     if (answer == null) return null;
-    MillenniumMessage message = await inputStream
-        .firstWhere((MillenniumMessage msg) => msg.checkCode(answer.code));
+    ChessLinkMessage message = await inputStream
+        .firstWhere((ChessLinkMessage msg) => msg.checkCode(answer.code));
     return answer.process(message.getMessage());
   }
 }

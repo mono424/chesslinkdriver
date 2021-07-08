@@ -1,6 +1,6 @@
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
 
 class SetScanTime extends Command<void> {
   final String code = "W01";
@@ -14,7 +14,7 @@ class SetScanTime extends Command<void> {
     int mul = time.inMilliseconds ~/ 2.048;
     if (mul > 255) mul = 255;
     else if (mul < 15) mul = 15;
-    return code + MillenniumMessage.numToHex(mul);
+    return code + ChessLinkMessage.numToHex(mul);
   }
 }
 

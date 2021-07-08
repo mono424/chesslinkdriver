@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_stateless_chessboard/flutter_stateless_chessboard.dart' as cb;
-import 'package:millenniumdriver/MillenniumCommunicationClient.dart';
+import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
 import 'package:flutter/material.dart';
-import 'package:millenniumdriver/MillenniumBoard.dart';
+import 'package:chesslinkdriver/ChessLink.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
-import 'package:millenniumdriver/protocol/model/StatusReportSendInterval.dart';
+import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
+import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  MillenniumBoard connectedBoard;
+  ChessLink connectedBoard;
 
   String _characteristicReadId = "49535343-1e4d-4bd9-ba61-23c647249616";
   String _characteristicWriteId = "49535343-8841-43f4-a8d4-ecbe34729bb3";
@@ -87,13 +87,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     await _characteristicRead.setNotifyValue(true);
 
-    MillenniumCommunicationClient client = MillenniumCommunicationClient(_characteristicWrite.write);
+    ChessLinkCommunicationClient client = ChessLinkCommunicationClient(_characteristicWrite.write);
     _characteristicRead.value.listen(client.handleReceive);
     
     // connect to board and initialize
-    MillenniumBoard nBoard = new MillenniumBoard();
+    ChessLink nBoard = new ChessLink();
     await nBoard.init(client);
-    // print("MillenniumBoard connected - SerialNumber: " +
+    // print("ChessLink connected - SerialNumber: " +
     //     nBoard.getSerialNumber() +
     //     " Version: " +0
     //     nBoard.getVersion());
@@ -160,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var i = 0; i < 8; i++) {
       int free = 0;
       for (var j = 0; j < 8; j++) {
-        String square = MillenniumBoard.RANKS.reversed.elementAt(j) + MillenniumBoard.ROWS[i];
+        String square = ChessLink.RANKS.reversed.elementAt(j) + ChessLink.ROWS[i];
         String piece = board[square];
         if (piece == null) {
           free++;
@@ -367,9 +367,9 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     Widget appBar = connectedBoard == null 
       ? AppBar(
-        title: Text("millenniumdriver example"),
+        title: Text("chesslinkdriver example"),
       ) : AppBar(
-          title: Text("millenniumdriver example"),
+          title: Text("chesslinkdriver example"),
           bottom: TabBar(
             tabs: [
               Tab(text: "Overview"),

@@ -1,5 +1,5 @@
-import 'package:millenniumdriver/MillenniumBoard.dart';
-import 'package:millenniumdriver/MillenniumMessage.dart';
+import 'package:chesslinkdriver/ChessLink.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
 
 class LEDPattern {
 
@@ -14,13 +14,13 @@ class LEDPattern {
   }
 
   void setRank(int rank, String squarePattern) {
-    for (var file in MillenniumBoard.RANKS) {
+    for (var file in ChessLink.RANKS) {
       pattern = _setSquareInFullPattern(pattern, file + rank.toString(), squarePattern);
     }
   }
 
   void setFile(String file, String squarePattern) {
-    for (var rank in MillenniumBoard.ROWS) {
+    for (var rank in ChessLink.ROWS) {
       pattern = _setSquareInFullPattern(pattern, file + rank, squarePattern);
     }
   }
@@ -56,7 +56,7 @@ class LEDPattern {
     if (s6) num ^= 32;
     if (s7) num ^= 64;
     if (s8) num ^= 128;
-    return MillenniumMessage.numToHex(num);
+    return ChessLinkMessage.numToHex(num);
   }
 
   static String generateSquarePatternN(int s8, int s7, int s6, int s5, int s4, int s3, int s2, int s1) {
@@ -92,8 +92,8 @@ class LEDPattern {
 
   // Example: LED1 LED2 LED10 LED11 = A8
   static List<int> getSquareIndices(String square) {
-    int rank = MillenniumBoard.RANKS.reversed.toList().indexOf(square.substring(0, 1).toLowerCase());
-    int row = MillenniumBoard.ROWS.indexOf(square.substring(1, 2));
+    int rank = ChessLink.RANKS.reversed.toList().indexOf(square.substring(0, 1).toLowerCase());
+    int row = ChessLink.ROWS.indexOf(square.substring(1, 2));
 
     return [
       rank * 9 + row,

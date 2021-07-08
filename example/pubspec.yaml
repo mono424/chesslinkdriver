@@ -23,7 +23,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  millenniumdriver: 
+  chesslinkdriver: 
     path: ../
   flutter_blue: ^0.8.0
   flutter_stateless_chessboard: ^0.0.6

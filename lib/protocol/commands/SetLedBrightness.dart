@@ -1,6 +1,6 @@
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
 
 class SetLedBrightness extends Command<void> {
   final String code = "W04";
@@ -12,7 +12,7 @@ class SetLedBrightness extends Command<void> {
   SetLedBrightness(this.level);
 
   Future<String> messageBuilder() async {
-    return code + MillenniumMessage.numToHex((level * 14).round());
+    return code + ChessLinkMessage.numToHex((level * 14).round());
   }
 }
 

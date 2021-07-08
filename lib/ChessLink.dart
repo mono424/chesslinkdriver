@@ -1,25 +1,25 @@
 import 'dart:async';
-import 'package:millenniumdriver/MillenniumCommunicationClient.dart';
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/commands/ExtinguishAllLeds.dart';
-import 'package:millenniumdriver/protocol/commands/GetStatus.dart';
-import 'package:millenniumdriver/protocol/commands/GetVersion.dart';
-import 'package:millenniumdriver/protocol/commands/Reset.dart';
-import 'package:millenniumdriver/protocol/commands/SetAutomaticReports.dart';
-import 'package:millenniumdriver/protocol/commands/SetAutomaticReportsTime.dart';
-import 'package:millenniumdriver/protocol/commands/SetLedBrightness.dart';
-import 'package:millenniumdriver/protocol/commands/SetLeds.dart';
-import 'package:millenniumdriver/protocol/commands/SetScanTime.dart';
-import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
-import 'package:millenniumdriver/protocol/model/RequestConfig.dart';
-import 'package:millenniumdriver/protocol/model/StatusReportSendInterval.dart';
+import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/commands/ExtinguishAllLeds.dart';
+import 'package:chesslinkdriver/protocol/commands/GetStatus.dart';
+import 'package:chesslinkdriver/protocol/commands/GetVersion.dart';
+import 'package:chesslinkdriver/protocol/commands/Reset.dart';
+import 'package:chesslinkdriver/protocol/commands/SetAutomaticReports.dart';
+import 'package:chesslinkdriver/protocol/commands/SetAutomaticReportsTime.dart';
+import 'package:chesslinkdriver/protocol/commands/SetLedBrightness.dart';
+import 'package:chesslinkdriver/protocol/commands/SetLeds.dart';
+import 'package:chesslinkdriver/protocol/commands/SetScanTime.dart';
+import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
+import 'package:chesslinkdriver/protocol/model/RequestConfig.dart';
+import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
 
-class MillenniumBoard {
+class ChessLink {
   
-  MillenniumCommunicationClient _client;
+  ChessLinkCommunicationClient _client;
 
   StreamController _inputStreamController;
-  Stream<MillenniumMessage> _inputStream;
+  Stream<ChessLinkMessage> _inputStream;
   List<int> _buffer;
   String _version;
 
@@ -37,13 +37,13 @@ class MillenniumBoard {
 
   get version => _version;
 
-  MillenniumBoard();
+  ChessLink();
 
-  Future<void> init(MillenniumCommunicationClient client, { Duration initialDelay = const Duration(milliseconds: 300) }) async {
+  Future<void> init(ChessLinkCommunicationClient client, { Duration initialDelay = const Duration(milliseconds: 300) }) async {
     _client = client;
 
     _client.receiveStream.listen(_handleInputStream);
-    _inputStreamController = new StreamController<MillenniumMessage>();
+    _inputStreamController = new StreamController<ChessLinkMessage>();
     _inputStream = _inputStreamController.stream.asBroadcastStream();
 
     await Future.delayed(initialDelay);
@@ -64,14 +64,14 @@ class MillenniumBoard {
 
     do {
       try {
-        MillenniumMessage message = MillenniumMessage.parse(_buffer);
+        ChessLinkMessage message = ChessLinkMessage.parse(_buffer);
         _inputStreamController.add(message);
         _buffer.removeRange(0, message.getLength());
         //print("[IMessage] valid (" + message.getCode() + ")");
-      } on MillenniumInvalidMessageException catch (e) {
+      } on ChessLinkInvalidMessageException catch (e) {
         skipBadBytes(e.skipBytes, _buffer);
         //print("[IMessage] invalid");
-      } on MillenniumUncompleteMessage {
+      } on ChessLinkUncompleteMessage {
         // wait longer
         break;
       } catch (err) {
@@ -81,7 +81,7 @@ class MillenniumBoard {
     } while (_buffer.length > 0);
   }
 
-  Stream<MillenniumMessage> getInputStream() {
+  Stream<ChessLinkMessage> getInputStream() {
     return _inputStream;
   }
 
@@ -92,8 +92,8 @@ class MillenniumBoard {
   Stream<Map<String, String>> getBoardUpdateStream() {
     return getInputStream()
         .where(
-            (MillenniumMessage msg) => msg.getCode() == GetStatusAnswer().code)
-        .map((MillenniumMessage msg) => GetStatusAnswer().process(msg.getMessage()));
+            (ChessLinkMessage msg) => msg.getCode() == GetStatusAnswer().code)
+        .map((ChessLinkMessage msg) => GetStatusAnswer().process(msg.getMessage()));
   }
 
   Future<void> extinguishAllLeds({ RequestConfig config = const RequestConfig() }) {

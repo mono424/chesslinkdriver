@@ -1,7 +1,7 @@
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
-import 'package:millenniumdriver/protocol/model/LEDPattern.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
 
 class SetLeds extends Command<void> {
   final String code = "L";
@@ -15,7 +15,7 @@ class SetLeds extends Command<void> {
 
   String slotTimeHex() {
     int mul = slotTime.inMilliseconds ~/ 4.096;
-    return MillenniumMessage.numToHex(mul);
+    return ChessLinkMessage.numToHex(mul);
   }
 
   Future<String> messageBuilder() async {

@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'dart:typed_data';
-
-class MillenniumCommunicationClient {
+class ChessLinkCommunicationClient {
   final Future<void> Function(List<int>) send;
   final StreamController<List<int>> _inputStreamController = StreamController<List<int>>();
 
@@ -10,7 +8,7 @@ class MillenniumCommunicationClient {
     return _inputStreamController.stream.asBroadcastStream();
   }
 
-  MillenniumCommunicationClient(this.send);
+  ChessLinkCommunicationClient(this.send);
 
   void handleReceive(List<int> message) {
     _inputStreamController.add(message);

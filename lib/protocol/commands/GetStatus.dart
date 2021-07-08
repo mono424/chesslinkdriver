@@ -1,6 +1,6 @@
-import 'package:millenniumdriver/MillenniumBoard.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/ChessLink.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
 
 class GetStatus extends Command<Map<String,String>> {
   final String code = "S";
@@ -13,9 +13,9 @@ class GetStatusAnswer extends Answer<Map<String,String>> {
   @override
   Map<String,String> process(String msg) {
     Map<String,String> board = Map<String,String>();
-    for (var i = 0; i < MillenniumBoard.SQUARES.length; i++) {
+    for (var i = 0; i < ChessLink.SQUARES.length; i++) {
       String piece = msg[i + 1];
-      board[MillenniumBoard.SQUARES[i]] = piece == "." ? null : piece;
+      board[ChessLink.SQUARES[i]] = piece == "." ? null : piece;
     }
     return board;
   }

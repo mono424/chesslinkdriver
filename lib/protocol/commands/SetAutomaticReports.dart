@@ -1,7 +1,7 @@
-import 'package:millenniumdriver/MillenniumMessage.dart';
-import 'package:millenniumdriver/protocol/Answer.dart';
-import 'package:millenniumdriver/protocol/Command.dart';
-import 'package:millenniumdriver/protocol/model/StatusReportSendInterval.dart';
+import 'package:chesslinkdriver/ChessLinkMessage.dart';
+import 'package:chesslinkdriver/protocol/Answer.dart';
+import 'package:chesslinkdriver/protocol/Command.dart';
+import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
 
 class SetAutomaticReports extends Command<void> {
   final String code = "W02";
@@ -12,7 +12,7 @@ class SetAutomaticReports extends Command<void> {
   SetAutomaticReports(this.interval);
 
   Future<String> messageBuilder() async {
-    return code + MillenniumMessage.numToHex(interval.index);
+    return code + ChessLinkMessage.numToHex(interval.index);
   }
 }
 
