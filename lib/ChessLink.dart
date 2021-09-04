@@ -10,6 +10,7 @@ import 'package:chesslinkdriver/protocol/commands/SetAutomaticReportsTime.dart';
 import 'package:chesslinkdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:chesslinkdriver/protocol/commands/SetLeds.dart';
 import 'package:chesslinkdriver/protocol/commands/SetScanTime.dart';
+import 'package:chesslinkdriver/protocol/model/ChessLinkBoardType.dart';
 import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
 import 'package:chesslinkdriver/protocol/model/RequestConfig.dart';
 import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
@@ -22,6 +23,7 @@ class ChessLink {
   Stream<ChessLinkMessage> _inputStream;
   List<int> _buffer;
   String _version;
+  ChessLinkBoardType _boardType;
 
   static List<String> RANKS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   static List<String> ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -35,7 +37,8 @@ class ChessLink {
     return squares;
   }
 
-  get version => _version;
+  String get version => _version;
+  ChessLinkBoardType get boardType => _boardType;
 
   ChessLink();
 
@@ -49,10 +52,11 @@ class ChessLink {
     await Future.delayed(initialDelay);
 
     _version = await getVersion();
+    _boardType = _version.startsWith("1.") ? ChessLinkBoardType.performance : ChessLinkBoardType.exclusive;
   }
 
   void _handleInputStream(List<int> chunk) {
-    //print("> " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
+    print("> " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
     if (_buffer == null)
       _buffer = chunk.toList();
     else
@@ -67,15 +71,15 @@ class ChessLink {
         ChessLinkMessage message = ChessLinkMessage.parse(_buffer);
         _inputStreamController.add(message);
         _buffer.removeRange(0, message.getLength());
-        //print("[IMessage] valid (" + message.getCode() + ")");
+        // print("[IMessage] valid (" + message.getCode() + ")");
       } on ChessLinkInvalidMessageException catch (e) {
         skipBadBytes(e.skipBytes, _buffer);
-        //print("[IMessage] invalid");
+        // print("[IMessage] invalid");
       } on ChessLinkUncompleteMessage {
         // wait longer
         break;
       } catch (err) {
-        //print("Unknown parse-error: " + err.toString());
+        // print("Unknown parse-error: " + err.toString());
         break;
       }
     } while (_buffer.length > 0);
@@ -97,30 +101,51 @@ class ChessLink {
   }
 
   Future<void> extinguishAllLeds({ RequestConfig config = const RequestConfig() }) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return ExtinguishAllLeds().send(_client);
+    }
     return ExtinguishAllLeds().request(_client, _inputStream, config);
   }
 
   Future<void> turnOnSingleLed(String square, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetLeds(slotTime, LEDPattern.singleSquare(square)).send(_client);
+    }
     return SetLeds(slotTime, LEDPattern.singleSquare(square)).request(_client, _inputStream, config);
   }
 
   Future<void> turnOnAllLeds({Duration slotTime = const Duration(milliseconds: 500), String pattern = "ff", RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetLeds(slotTime, LEDPattern.allLeds(hex: pattern)).send(_client);
+    }
     return SetLeds(slotTime, LEDPattern.allLeds(hex: pattern)).request(_client, _inputStream, config);
   }
 
   Future<void> turnOnLeds(List<String> squares, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetLeds(slotTime, LEDPattern.manySquares(squares)).send(_client);
+    }
     return SetLeds(slotTime, LEDPattern.manySquares(squares)).request(_client, _inputStream, config);
   }
 
   Future<void> setLeds(LEDPattern ledPattern, {Duration slotTime = const Duration(milliseconds: 500), RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetLeds(slotTime, ledPattern).send(_client);
+    }
     return SetLeds(slotTime, ledPattern).request(_client, _inputStream, config);
   }
 
   Future<void> setAutomaticReports(StatusReportSendInterval interval, {RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetAutomaticReports(interval).send(_client);
+    }
     return SetAutomaticReports(interval).request(_client, _inputStream, config);
   }
 
   Future<void> setAutomaticReportsTime(Duration time, {RequestConfig config = const RequestConfig()}) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetAutomaticReportsTime(time).send(_client);
+    }
     return SetAutomaticReportsTime(time).request(_client, _inputStream, config);
   }
 
@@ -129,6 +154,9 @@ class ChessLink {
   }
 
   Future<void> setScanTime(Duration time, { RequestConfig config = const RequestConfig() }) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetScanTime(time).send(_client);
+    }
     return SetScanTime(time).request(_client, _inputStream);
   }
 
@@ -141,6 +169,9 @@ class ChessLink {
   }
 
   Future<void> setLedBrightness(double level, { RequestConfig config = const RequestConfig() }) {
+    if (_boardType == ChessLinkBoardType.performance) {
+      return SetLedBrightness(level).send(_client);
+    }
     return SetLedBrightness(level).request(_client, _inputStream, config);
   }
 

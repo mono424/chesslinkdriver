@@ -1,3 +1,7 @@
+## [0.0.2] - Performance Board support
+
+* Performance Board support
+
 ## [0.0.1+3] - Added preview gif
 
 * Added preview gif
