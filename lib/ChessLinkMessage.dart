@@ -81,9 +81,10 @@ class ChessLinkMessage {
   int nextChecksumIndex(List<String> chars, { int start = 0 }) {
     bool foundOneNum = false;
     for (var i = start; i < chars.length; i++) {
-      bool isNum = int.tryParse(chars[i], radix: 16) != null;
+      int num = int.tryParse(chars[i], radix: 16);
+      bool isNum = num != null;
       if (isNum && foundOneNum) return i - 1;
-      if (isNum) foundOneNum = true;
+      if (isNum && num <= 7) foundOneNum = true;
       else foundOneNum = false;
     }
     return null;
