@@ -1,3 +1,7 @@
+## [0.0.2] - Fix checksum identification bug
+
+* Two bishops were wrongly identified as checksum as they are [B, B] what could be interpreted as hex number. Fix checks now the first number to be smaller then 7, as this is the biggest number the checksum can have.
+
 ## [0.0.2] - Performance Board support
 
 * Performance Board support
