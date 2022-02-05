@@ -3,9 +3,12 @@ class ChessLinkMessage {
   int _length;
   String _message;
 
-  ChessLinkMessage.parse(List<int> buffer) {
-    int firstParityFail = buffer.firstWhere(((b) => !checkOddParityBit(b)), orElse: () => null);
-    if (firstParityFail != null) throw ChessLinkInvalidMessageException(firstParityFail + 1);
+  ChessLinkMessage.parse(List<int> buffer, { bool checkParity = true }) {
+    if (checkParity) {
+      int firstParityFail = buffer.indexWhere(((b) => !checkOddParityBit(b)));
+      if (firstParityFail != -1)
+        throw ChessLinkInvalidMessageException(firstParityFail + 1);
+    }
 
     List<String> asciiChars = buffer.map((n) => String.fromCharCode(n & 127)).toList();
 
@@ -28,7 +31,6 @@ class ChessLinkMessage {
         return;
       }
     } while(true);
-    
   }
 
   bool checkCode(String code) {

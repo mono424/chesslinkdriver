@@ -1,12 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter_stateless_chessboard/flutter_stateless_chessboard.dart' as cb;
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_stateless_chessboard/flutter_stateless_chessboard.dart'
+    as cb;
 import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
 import 'package:flutter/material.dart';
 import 'package:chesslinkdriver/ChessLink.dart';
-import 'package:flutter_blue/flutter_blue.dart';
 import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
 import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(MyApp());
@@ -35,78 +37,101 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   ChessLink connectedBoard;
 
-  String _characteristicReadId = "49535343-1e4d-4bd9-ba61-23c647249616";
-  String _characteristicWriteId = "49535343-8841-43f4-a8d4-ecbe34729bb3";
-  Duration scanDuration = Duration(seconds: 4);
-  List<ScanResult> devices = [];
+  Uuid _serviceId = Uuid.parse("49535343-fe7d-4ae5-8fa9-9fafd205e455");
+  Uuid _characteristicReadId =
+      Uuid.parse("49535343-1e4d-4bd9-ba61-23c647249616");
+  Uuid _characteristicWriteId =
+      Uuid.parse("49535343-8841-43f4-a8d4-ecbe34729bb3");
+  Duration scanDuration = Duration(seconds: 10);
+  List<DiscoveredDevice> devices = [];
   bool scanning = false;
-  
-  FlutterBlue flutterBlue = FlutterBlue.instance;
-  BluetoothDevice _port;
-  BluetoothCharacteristic _characteristicRead;
-  BluetoothCharacteristic _characteristicWrite;
+
+  final flutterReactiveBle = FlutterReactiveBle();
   Timer updateSquareLedTimer;
-
-
+  StreamSubscription<ConnectionStateUpdate> connection;
   String version;
 
-  Future<void> listDevices() async {
-    setState(() { scanning = true; });
-    // Start scanning
-    flutterBlue.startScan(timeout: scanDuration);
-
-    // Listen to scan results
-    flutterBlue.scanResults.listen((results) {
-        // do something with scan results
-        setState(() {
-          devices = results.where((r) => r.device.name.contains("MILLENNIUM")).toList();
-        });
-    });
-
-    Future.delayed(scanDuration, () => setState(() { scanning = false; }));
-    // Stop scanning
-    // flutterBlue.stopScan();
+  Future<void> reqPermission() async {
+    await Permission.locationWhenInUse.request();
+    await Permission.bluetoothConnect.request();
+    await Permission.bluetoothScan.request();
   }
 
-  void connect(BluetoothDevice port) async {
-    if (_port != port) {
-      _port = port;
-      await _port.connect();
-    }
-    
-    List<BluetoothService> services = await _port.discoverServices();
-
-    for (BluetoothService s in services) {
-      for (BluetoothCharacteristic c in s.characteristics) {
-        if (c.uuid.toString() == _characteristicReadId) _characteristicRead = c;
-        if (c.uuid.toString() == _characteristicWriteId) _characteristicWrite = c;
-        if (c.properties.write) print("Write avaiable on: " + c.uuid.toString());
-        if (c.properties.read && c.properties.notify) print("Read/Noitify avaiable on: " + c.uuid.toString());
-      }
-    }
-
-    await _characteristicRead.setNotifyValue(true);
-
-    ChessLinkCommunicationClient client = ChessLinkCommunicationClient(_characteristicWrite.write);
-    _characteristicRead.value.listen(client.handleReceive);
-    
-    // connect to board and initialize
-    ChessLink nBoard = new ChessLink();
-    await nBoard.init(client);
-    // print("ChessLink connected - SerialNumber: " +
-    //     nBoard.getSerialNumber() +
-    //     " Version: " +0
-    //     nBoard.getVersion());
-
-    // set connected board
+  Future<void> listDevices() async {
     setState(() {
-      connectedBoard = nBoard;
+      scanning = true;
+      devices = [];
     });
 
-    // // set board to update mode
-    // nBoard.setBoardToUpdateMode();
+    await reqPermission();
 
-    updateSquareLedTimer = Timer.periodic(Duration(milliseconds: 200), (t) => lightChangeSquare());
+    // Listen to scan results
+    final sub = flutterReactiveBle.scanForDevices(
+        withServices: [], scanMode: ScanMode.lowLatency).listen((device) async {
+      if (!device.name.contains("MILLENNIUM") ||
+          devices.indexWhere((e) => e.id == device.id) > -1) return;
+
+      setState(() {
+        devices.add(device);
+      });
+    }, onError: (e) {
+      print(e);
+    });
+
+    // Stop scanning
+    Future.delayed(scanDuration, () {
+      sub.cancel();
+      setState(() {
+        scanning = false;
+      });
+    });
+  }
+
+  void connect(DiscoveredDevice device) async {
+    connection = flutterReactiveBle
+        .connectToDevice(
+      id: device.id,
+      connectionTimeout: const Duration(seconds: 2),
+    )
+        .listen((connectionState) async {
+      print(connectionState.connectionState);
+      if (connectionState.connectionState ==
+          DeviceConnectionState.disconnected) {
+        disconnect();
+        return;
+      }
+
+      if (connectionState.connectionState != DeviceConnectionState.connected) {
+        return;
+      }
+
+      final read = QualifiedCharacteristic(
+          serviceId: _serviceId,
+          characteristicId: _characteristicReadId,
+          deviceId: device.id);
+      final write = QualifiedCharacteristic(
+          serviceId: _serviceId,
+          characteristicId: _characteristicWriteId,
+          deviceId: device.id);
+
+      ChessLinkCommunicationClient client =
+          ChessLinkCommunicationClient((v) => flutterReactiveBle.writeCharacteristicWithResponse(write, value: v));
+      flutterReactiveBle
+          .subscribeToCharacteristic(read)
+          .listen(client.handleReceive);
+
+      ChessLink nBoard = new ChessLink();
+      await nBoard.init(client, initialDelay: Duration(seconds: 1));
+
+      setState(() {
+        connectedBoard = nBoard;
+      });
+
+      updateSquareLedTimer = Timer.periodic(
+          Duration(milliseconds: 200), (t) => lightChangeSquare());
+    }, onError: (Object e) {
+      print(e);
+    });
   }
 
   void getVersion() async {
@@ -118,8 +143,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void setLedPatternB1ToC3() async {
     LEDPattern ledPattern = LEDPattern();
-    ledPattern.set("B1", LEDPattern.generateSquarePattern(true, true, true, true, false, false, false, false));
-    ledPattern.set("C3", LEDPattern.generateSquarePattern(false, false, false, false, true, true, true, true));
+    ledPattern.set(
+        "B1",
+        LEDPattern.generateSquarePattern(
+            true, true, true, true, false, false, false, false));
+    ledPattern.set(
+        "C3",
+        LEDPattern.generateSquarePattern(
+            false, false, false, false, true, true, true, true));
     connectedBoard.setLeds(ledPattern, slotTime: Duration(milliseconds: 100));
   }
 
@@ -128,8 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
       updateSquareLedTimer.cancel();
       updateSquareLedTimer = null;
     }
-    _port.disconnect();
-    _port = null;
+    connection.cancel();
     setState(() {
       connectedBoard = null;
     });
@@ -160,7 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var i = 0; i < 8; i++) {
       int free = 0;
       for (var j = 0; j < 8; j++) {
-        String square = ChessLink.RANKS.reversed.elementAt(j) + ChessLink.ROWS[i];
+        String square =
+            ChessLink.RANKS.reversed.elementAt(j) + ChessLink.ROWS[i];
         String piece = board[square];
         if (piece == null) {
           free++;
@@ -185,61 +216,51 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         SizedBox(height: 25),
         Center(
-          child: StreamBuilder(
-            stream: connectedBoard?.getBoardUpdateStream(),
-              builder: (context, AsyncSnapshot<Map<String, String>> snapshot) {
-                if (!snapshot.hasData) return Text("-");
+            child: StreamBuilder(
+                stream: connectedBoard?.getBoardUpdateStream(),
+                builder:
+                    (context, AsyncSnapshot<Map<String, String>> snapshot) {
+                  if (!snapshot.hasData) return Text("-");
 
-                board = snapshot.data;
-                String fen = boardToFen(snapshot.data);
+                  board = snapshot.data.map((key, value) => MapEntry(key, value == "O" ? "P" : value));
+                  String fen = boardToFen(board);
 
-                return cb.Chessboard(
-                  size: 300,
-                  fen: fen,
-                  orientation: cb.Color.BLACK,  // optional
-                  lightSquareColor: Color.fromRGBO(240, 217, 181, 1), // optional
-                  darkSquareColor: Color.fromRGBO(181, 136, 99, 1), // optional
-                );
-              }
-          )
-        ),
+                  return cb.Chessboard(
+                    size: 300,
+                    fen: fen,
+                    orientation: cb.Color.BLACK, // optional
+                    lightSquareColor:
+                        Color.fromRGBO(240, 217, 181, 1), // optional
+                    darkSquareColor:
+                        Color.fromRGBO(181, 136, 99, 1), // optional
+                  );
+                })),
         TextButton(
-          onPressed: getVersion,
-          child: Text("Get Version (" + (version ?? "_") + ")")
-        ),
+            onPressed: getVersion,
+            child: Text("Get Version (" + (version ?? "_") + ")")),
         TextButton(
-          onPressed: () => connectedBoard.turnOnAllLeds(),
-          child: Text("Turn on LED's")
-        ),
+            onPressed: () => connectedBoard.turnOnAllLeds(),
+            child: Text("Turn on LED's")),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: setLedPatternB1ToC3,
-              child: Text("Turn on B1 -> C3")
-            ),
+                onPressed: setLedPatternB1ToC3,
+                child: Text("Turn on B1 -> C3")),
             TextButton(
-              onPressed: () => connectedBoard.turnOnSingleLed("A1"),
-              child: Text("Turn on A1 LED")
-            ),
+                onPressed: () => connectedBoard.turnOnSingleLed("A1"),
+                child: Text("Turn on A1 LED")),
           ],
         ),
         TextButton(
-          onPressed: () => connectedBoard.extinguishAllLeds(),
-          child: Text("Turn off LED's")
-        ),
+            onPressed: () => connectedBoard.extinguishAllLeds(),
+            child: Text("Turn off LED's")),
         TextButton(
-          onPressed: () => connectedBoard.getStatus(),
-          child: Text("Get Board")
-        ),
+            onPressed: () => connectedBoard.getStatus(),
+            child: Text("Get Board")),
         TextButton(
-          onPressed: () => connectedBoard.reset(),
-          child: Text("Reset")
-        ),
-        TextButton(
-          onPressed: disconnect,
-          child: Text("Disconnect")
-        ),
+            onPressed: () => connectedBoard.reset(), child: Text("Reset")),
+        TextButton(onPressed: disconnect, child: Text("Disconnect")),
       ],
     );
   }
@@ -253,21 +274,21 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.disabled),
-              child: Text("disabled")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReports(StatusReportSendInterval.disabled),
+                child: Text("disabled")),
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.onEveryScan),
-              child: Text("onEveryScan")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReports(StatusReportSendInterval.onEveryScan),
+                child: Text("onEveryScan")),
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.onChange),
-              child: Text("onChange")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReports(StatusReportSendInterval.onChange),
+                child: Text("onChange")),
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReports(StatusReportSendInterval.withSetTime),
-              child: Text("withSetTime")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReports(StatusReportSendInterval.withSetTime),
+                child: Text("withSetTime")),
           ],
         ),
         SizedBox(height: 25),
@@ -276,17 +297,17 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(milliseconds: 200)),
-              child: Text("200ms")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReportsTime(Duration(milliseconds: 200)),
+                child: Text("200ms")),
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(milliseconds: 500)),
-              child: Text("500ms")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReportsTime(Duration(milliseconds: 500)),
+                child: Text("500ms")),
             TextButton(
-              onPressed: () => connectedBoard.setAutomaticReportsTime(Duration(seconds: 1)),
-              child: Text("1s")
-            ),
+                onPressed: () => connectedBoard
+                    .setAutomaticReportsTime(Duration(seconds: 1)),
+                child: Text("1s")),
           ],
         ),
         SizedBox(height: 25),
@@ -295,17 +316,14 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: () => connectedBoard.setLedBrightness(0),
-              child: Text("dim(0)")
-            ),
+                onPressed: () => connectedBoard.setLedBrightness(0),
+                child: Text("dim(0)")),
             TextButton(
-              onPressed: () => connectedBoard.setLedBrightness(0.5),
-              child: Text("middle(0.5)")
-            ),
+                onPressed: () => connectedBoard.setLedBrightness(0.5),
+                child: Text("middle(0.5)")),
             TextButton(
-              onPressed: () => connectedBoard.setLedBrightness(1),
-              child: Text("full(1)")
-            ),
+                onPressed: () => connectedBoard.setLedBrightness(1),
+                child: Text("full(1)")),
           ],
         ),
         SizedBox(height: 25),
@@ -314,17 +332,17 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 31)),
-              child: Text("32 Scans/Sec")
-            ),
+                onPressed: () =>
+                    connectedBoard.setScanTime(Duration(milliseconds: 31)),
+                child: Text("32 Scans/Sec")),
             TextButton(
-              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 41)),
-              child: Text("24.4 Scans/Sec")
-            ),
+                onPressed: () =>
+                    connectedBoard.setScanTime(Duration(milliseconds: 41)),
+                child: Text("24.4 Scans/Sec")),
             TextButton(
-              onPressed: () => connectedBoard.setScanTime(Duration(milliseconds: 523)),
-              child: Text("1.9 Scans/Sec")
-            ),
+                onPressed: () =>
+                    connectedBoard.setScanTime(Duration(milliseconds: 523)),
+                child: Text("1.9 Scans/Sec")),
           ],
         )
       ],
@@ -337,20 +355,21 @@ class _MyHomePageState extends State<MyHomePage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(height: 25),
-        Center(child: scanning ? CircularProgressIndicator() : TextButton(
-          child: Text("List Devices"),
-          onPressed: listDevices,
-        )),
-
-        Flexible( child: ListView.builder(
-          itemCount: devices.length,
-          itemBuilder: (context, index) => ListTile(
-            title: Text(devices[index].device.name),
-            subtitle: Text(devices[index].device.id.id),
-            onTap: () => connect(devices[index].device),
-          )
-        )),
-        
+        Center(
+            child: scanning
+                ? CircularProgressIndicator()
+                : TextButton(
+                    child: Text("List Devices"),
+                    onPressed: listDevices,
+                  )),
+        Flexible(
+            child: ListView.builder(
+                itemCount: devices.length,
+                itemBuilder: (context, index) => ListTile(
+                      title: Text(devices[index].name),
+                      subtitle: Text(devices[index].id.toString()),
+                      onTap: () => connect(devices[index]),
+                    ))),
         SizedBox(height: 24)
       ],
     );
@@ -358,33 +377,29 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = connectedBoard == null 
-      ? deivceList() : TabBarView(
-        children: [
-          connectedBoardButtons(),
-          additionalSettings(),
-        ],
-      );
-    Widget appBar = connectedBoard == null 
-      ? AppBar(
-        title: Text("chesslinkdriver example"),
-      ) : AppBar(
-          title: Text("chesslinkdriver example"),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: "Overview"),
-              Tab(text: "Additional"),
+    Widget content = connectedBoard == null
+        ? deivceList()
+        : TabBarView(
+            children: [
+              connectedBoardButtons(),
+              additionalSettings(),
             ],
-        ),
-      );
-
+          );
+    Widget appBar = connectedBoard == null
+        ? AppBar(
+            title: Text("chesslinkdriver example"),
+          )
+        : AppBar(
+            title: Text("chesslinkdriver example"),
+            bottom: TabBar(
+              tabs: [
+                Tab(text: "Overview"),
+                Tab(text: "Additional"),
+              ],
+            ),
+          );
 
     return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: appBar,
-        body: content
-      )
-    );
+        length: 2, child: Scaffold(appBar: appBar, body: content));
   }
 }
