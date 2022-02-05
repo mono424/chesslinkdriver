@@ -4,31 +4,29 @@ class ChessLinkMessage {
   String _message;
 
   ChessLinkMessage.parse(List<int> buffer) {
-    int firstParityFail = buffer.firstWhere(((b) => !checkOddParityBit(b)), orElse: () => null);
-    if (firstParityFail != null) throw ChessLinkInvalidMessageException(firstParityFail + 1);
+    int firstParityFail = buffer.indexWhere(((b) => !checkOddParityBit(b)));
+    if (firstParityFail != -1)
+      throw ChessLinkInvalidMessageException(firstParityFail + 1);
 
     List<String> asciiChars = buffer.map((n) => String.fromCharCode(n & 127)).toList();
 
-    int nextChecksum;
-    List<String> message = [];
+    int nextChecksum = nextChecksumIndex(asciiChars);
 
-    do {
-      nextChecksum = nextChecksumIndex(asciiChars, start: message.length);
-      if (nextChecksum == null) {
-        if (message.length == 0) throw ChessLinkUncompleteMessage();
-        throw ChessLinkInvalidMessageException(nextChecksumIndex(asciiChars) + 2);
-      }
-      message = asciiChars.sublist(0, nextChecksum + 2);
+    if (nextChecksum == null) {
+      throw ChessLinkUncompleteMessage();
+    }
 
-      String messageString = message.join("");
-      if (checkChecksum(messageString)) {
-        _code = message[0];
-        _length = message.length;
-        _message = messageString;
-        return;
-      }
-    } while(true);
-    
+    List<String> message = asciiChars.sublist(0, nextChecksum + 2);
+    String messageString = message.join("");
+
+    if (checkChecksum(messageString)) {
+      _code = message[0];
+      _length = message.length;
+      _message = messageString;
+      return;
+    } else {
+      throw ChessLinkInvalidMessageException(nextChecksum + 2);
+    }
   }
 
   bool checkCode(String code) {

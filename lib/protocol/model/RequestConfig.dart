@@ -5,8 +5,8 @@ class RequestConfig {
 
   const RequestConfig([
     this.retries = 3,
-    this.timeout = const Duration(milliseconds: 200),
-    this.retryDelay = const Duration(milliseconds: 200)
+    this.timeout = const Duration(seconds: 200),
+      this.retryDelay = const Duration(seconds: 200)
   ]);
 
   RequestConfig withDecreasedRetry() {
