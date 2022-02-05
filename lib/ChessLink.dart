@@ -23,7 +23,7 @@ class ChessLink {
   Stream<ChessLinkMessage> _inputStream;
   List<int> _buffer;
   String _version;
-  ChessLinkBoardType _boardType;
+  ChessLinkBoardType _boardType = ChessLinkBoardType.unknown;
 
   static List<String> RANKS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   static List<String> ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -78,18 +78,21 @@ class ChessLink {
 
     do {
       try {
-        ChessLinkMessage message = ChessLinkMessage.parse(_buffer);
+        ChessLinkMessage message = ChessLinkMessage.parse(
+          _buffer,
+          checkParity: boardType != ChessLinkBoardType.eONE && boardType != ChessLinkBoardType.unknown
+        );
         _inputStreamController.add(message);
         _buffer.removeRange(0, message.getLength());
         // print("[IMessage] valid (" + message.getCode() + ")");
       } on ChessLinkInvalidMessageException catch (e) {
         skipBadBytes(e.skipBytes, _buffer);
-        // print("[IMessage] invalid");
+        print("[IMessage] invalid");
       } on ChessLinkUncompleteMessage {
         // wait longer
         break;
       } catch (err) {
-        // print("Unknown parse-error: " + err.toString());
+        print("Unknown parse-error: " + err.toString());
         break;
       }
     } while (_buffer.length > 0);

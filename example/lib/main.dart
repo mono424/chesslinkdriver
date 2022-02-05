@@ -115,10 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
           deviceId: device.id);
 
       ChessLinkCommunicationClient client =
-          ChessLinkCommunicationClient((v) async {
-        flutterReactiveBle.writeCharacteristicWithResponse(write, value: v);
-        return;
-      });
+          ChessLinkCommunicationClient((v) => flutterReactiveBle.writeCharacteristicWithResponse(write, value: v));
       flutterReactiveBle
           .subscribeToCharacteristic(read)
           .listen(client.handleReceive);
@@ -225,8 +222,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     (context, AsyncSnapshot<Map<String, String>> snapshot) {
                   if (!snapshot.hasData) return Text("-");
 
-                  board = snapshot.data;
-                  String fen = boardToFen(snapshot.data);
+                  board = snapshot.data.map((key, value) => MapEntry(key, value == "O" ? "P" : value));
+                  String fen = boardToFen(board);
 
                   return cb.Chessboard(
                     size: 300,
