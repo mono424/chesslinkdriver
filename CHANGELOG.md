@@ -1,3 +1,7 @@
+## [0.0.4] - Fix checksum identification bug
+
+* Millennium eONE gets detected. Sadly by disabling parity check for now ...
+
 ## [0.0.3] - Fix checksum identification bug
 
 * Two bishops were wrongly identified as checksum as they are [B, B] what could be interpreted as hex number. Fix checks now the first number to be smaller then 7, as this is the biggest number the checksum can have.
