@@ -51,7 +51,7 @@ class ChessLink {
 
     await Future.delayed(initialDelay);
 
-    _version = "2.0";//await getVersion();
+    _version = await getVersion();
     if (_version.startsWith("0.")) {
       _boardType = ChessLinkBoardType.exclusive;
     } else if (_version.startsWith("1.")) {
