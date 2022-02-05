@@ -65,7 +65,7 @@ class ChessLink {
   }
 
   void _handleInputStream(List<int> chunk) {
-    print("R > " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
+    // print("R > " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
     if (_buffer == null) {
       _buffer = chunk.toList();
     } else {
@@ -87,12 +87,12 @@ class ChessLink {
         // print("[IMessage] valid (" + message.getCode() + ")");
       } on ChessLinkInvalidMessageException catch (e) {
         skipBadBytes(e.skipBytes, _buffer);
-        print("[IMessage] invalid");
+        // print("[IMessage] invalid");
       } on ChessLinkUncompleteMessage {
         // wait longer
         break;
       } catch (err) {
-        print("Unknown parse-error: " + err.toString());
+        // print("Unknown parse-error: " + err.toString());
         break;
       }
     } while (_buffer.length > 0);

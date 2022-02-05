@@ -17,7 +17,7 @@ abstract class Command<T> {
     List<int> message = [...messageString.split(''), checksum[0], checksum[1]]
       .map((c) => ChessLinkMessage.setOddParityBit(c.codeUnits.first))
       .toList();
-    print("S > " + message.map((n) => String.fromCharCode(n & 127)).toString());
+    // print("S > " + message.map((n) => String.fromCharCode(n & 127)).toString());
     await client.send(message);
   }
 
