@@ -1,4 +1,4 @@
-## [0.0.4] - Fix checksum identification bug
+## [0.0.5] - Millennium eONE & new Example
 
 * Millennium eONE gets detected. Sadly by disabling parity check for now ...
 
