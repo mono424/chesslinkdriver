@@ -25,8 +25,9 @@ dependencies:
     sdk: flutter
   chesslinkdriver: 
     path: ../
-  flutter_blue: ^0.8.0
+  flutter_reactive_ble: ^5.0.2
   flutter_stateless_chessboard: ^0.0.6
+  permission_handler: ^8.3.0
 
 
   # The following adds the Cupertino Icons font to your application.

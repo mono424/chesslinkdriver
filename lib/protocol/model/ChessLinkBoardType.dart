@@ -1,3 +1,3 @@
 enum ChessLinkBoardType {
-  exclusive, performance
+  exclusive, performance, eONE, unknown
 }

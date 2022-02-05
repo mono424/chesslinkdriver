@@ -51,16 +51,26 @@ class ChessLink {
 
     await Future.delayed(initialDelay);
 
-    _version = await getVersion();
-    _boardType = _version.startsWith("1.") ? ChessLinkBoardType.performance : ChessLinkBoardType.exclusive;
+    _version = "2.0";//await getVersion();
+    if (_version.startsWith("0.")) {
+      _boardType = ChessLinkBoardType.exclusive;
+    } else if (_version.startsWith("1.")) {
+      _boardType = ChessLinkBoardType.performance;
+    } else if (_version.startsWith("2.")) {
+      _boardType = ChessLinkBoardType.eONE;
+    } else {
+      _boardType = ChessLinkBoardType.unknown;
+    }
+    
   }
 
   void _handleInputStream(List<int> chunk) {
-    //print("> " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
-    if (_buffer == null)
+    print("R > " + chunk.map((n) => String.fromCharCode(n & 127)).toString());
+    if (_buffer == null) {
       _buffer = chunk.toList();
-    else
+    } else {
       _buffer.addAll(chunk);
+    }
 
     if (_buffer.length > 1000) {
       _buffer.removeRange(0, _buffer.length - 1000);

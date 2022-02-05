@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_stateless_chessboard/flutter_stateless_chessboard.dart' as cb;
 import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
 import 'package:flutter/material.dart';
 import 'package:chesslinkdriver/ChessLink.dart';
-import 'package:flutter_blue/flutter_blue.dart';
 import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
 import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(MyApp());
@@ -35,78 +36,69 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   ChessLink connectedBoard;
 
-  String _characteristicReadId = "49535343-1e4d-4bd9-ba61-23c647249616";
-  String _characteristicWriteId = "49535343-8841-43f4-a8d4-ecbe34729bb3";
+  Uuid _serviceId = Uuid.parse("49535343-FE7D-4AE5-8FA9-9FAFD205E455");
+  Uuid _characteristicReadId = Uuid.parse("49535343-1e4d-4bd9-ba61-23c647249616");
+  Uuid _characteristicWriteId = Uuid.parse("49535343-8841-43f4-a8d4-ecbe34729bb3");
   Duration scanDuration = Duration(seconds: 4);
-  List<ScanResult> devices = [];
+  List<DiscoveredDevice> devices = [];
   bool scanning = false;
   
-  FlutterBlue flutterBlue = FlutterBlue.instance;
-  BluetoothDevice _port;
-  BluetoothCharacteristic _characteristicRead;
-  BluetoothCharacteristic _characteristicWrite;
+  final flutterReactiveBle = FlutterReactiveBle();
   Timer updateSquareLedTimer;
-
-
+  StreamSubscription<ConnectionStateUpdate> connection;
   String version;
 
-  Future<void> listDevices() async {
-    setState(() { scanning = true; });
-    // Start scanning
-    flutterBlue.startScan(timeout: scanDuration);
-
-    // Listen to scan results
-    flutterBlue.scanResults.listen((results) {
-        // do something with scan results
-        setState(() {
-          devices = results.where((r) => r.device.name.contains("MILLENNIUM")).toList();
-        });
-    });
-
-    Future.delayed(scanDuration, () => setState(() { scanning = false; }));
-    // Stop scanning
-    // flutterBlue.stopScan();
+  Future<void> reqPermission() async {
+    await Permission.locationWhenInUse.request();
+    await Permission.bluetoothConnect.request();
+    await Permission.bluetoothScan.request();
   }
 
-  void connect(BluetoothDevice port) async {
-    if (_port != port) {
-      _port = port;
-      await _port.connect();
-    }
-    
-    List<BluetoothService> services = await _port.discoverServices();
+  Future<void> listDevices() async {
+    setState(() { scanning = true; devices = []; });
 
-    for (BluetoothService s in services) {
-      for (BluetoothCharacteristic c in s.characteristics) {
-        if (c.uuid.toString() == _characteristicReadId) _characteristicRead = c;
-        if (c.uuid.toString() == _characteristicWriteId) _characteristicWrite = c;
-        if (c.properties.write) print("Write avaiable on: " + c.uuid.toString());
-        if (c.properties.read && c.properties.notify) print("Read/Noitify avaiable on: " + c.uuid.toString());
-      }
-    }
+    await reqPermission();
 
-    await _characteristicRead.setNotifyValue(true);
-
-    ChessLinkCommunicationClient client = ChessLinkCommunicationClient(_characteristicWrite.write);
-    _characteristicRead.value.listen(client.handleReceive);
-    
-    // connect to board and initialize
-    ChessLink nBoard = new ChessLink();
-    await nBoard.init(client);
-    // print("ChessLink connected - SerialNumber: " +
-    //     nBoard.getSerialNumber() +
-    //     " Version: " +0
-    //     nBoard.getVersion());
-
-    // set connected board
-    setState(() {
-      connectedBoard = nBoard;
+    // Listen to scan results
+    final sub = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.balanced).listen((device) {
+      if (!device.name.contains("MILLENNIUM") || devices.indexWhere((e) => e.id == device.id) > -1) return;
+      setState(() {
+        devices.add(device);
+      });
+    }, onError: (e) {
+      print(e);
     });
 
-    // // set board to update mode
-    // nBoard.setBoardToUpdateMode();
+    // Stop scanning
+    Future.delayed(scanDuration, () {
+      sub.cancel();
+      setState(() { scanning = false; });
+    });
+  }
 
-    updateSquareLedTimer = Timer.periodic(Duration(milliseconds: 200), (t) => lightChangeSquare());
+  void connect(DiscoveredDevice device) async {
+    connection = flutterReactiveBle.connectToDevice(
+      id: device.id,
+      servicesWithCharacteristicsToDiscover: {_serviceId: [_serviceId]},
+      connectionTimeout: const Duration(seconds: 2),
+    ).listen((connectionState) async {
+      final read = QualifiedCharacteristic(serviceId: _serviceId, characteristicId: _characteristicReadId, deviceId: device.id);
+      final write = QualifiedCharacteristic(serviceId: _serviceId, characteristicId: _characteristicWriteId, deviceId: device.id);
+
+      ChessLinkCommunicationClient client = ChessLinkCommunicationClient((v) => flutterReactiveBle.writeCharacteristicWithoutResponse(write, value: v));
+      flutterReactiveBle.subscribeToCharacteristic(read).listen(client.handleReceive);
+      
+      ChessLink nBoard = new ChessLink();
+      await nBoard.init(client, initialDelay: Duration(seconds: 1));
+
+      setState(() {
+        connectedBoard = nBoard;
+      });
+
+      updateSquareLedTimer = Timer.periodic(Duration(milliseconds: 200), (t) => lightChangeSquare());
+    }, onError: (Object e) {
+      print(e);
+    });
   }
 
   void getVersion() async {
@@ -128,8 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
       updateSquareLedTimer.cancel();
       updateSquareLedTimer = null;
     }
-    _port.disconnect();
-    _port = null;
+    connection.cancel();
     setState(() {
       connectedBoard = null;
     });
@@ -345,9 +336,9 @@ class _MyHomePageState extends State<MyHomePage> {
         Flexible( child: ListView.builder(
           itemCount: devices.length,
           itemBuilder: (context, index) => ListTile(
-            title: Text(devices[index].device.name),
-            subtitle: Text(devices[index].device.id.id),
-            onTap: () => connect(devices[index].device),
+            title: Text(devices[index].name),
+            subtitle: Text(devices[index].id.toString()),
+            onTap: () => connect(devices[index]),
           )
         )),
         
