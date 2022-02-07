@@ -1,6 +1,6 @@
 name: chesslinkdriver
 description: A ChessLink ChessLink-Chessboard Driver written in pure Dart
-version: 0.0.7
+version: 0.0.8
 repository: https://github.com/mono424/chesslinkdriver
 
 environment:

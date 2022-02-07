@@ -7,6 +7,7 @@ import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
 import 'package:flutter/material.dart';
 import 'package:chesslinkdriver/ChessLink.dart';
 import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
+import 'package:chesslinkdriver/protocol/model/EONESettings.dart';
 import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -324,6 +325,19 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
                 onPressed: () => connectedBoard.setLedBrightness(1),
                 child: Text("full(1)")),
+          ],
+        ),
+        SizedBox(height: 25),
+        Text("Set ChessRules (eONE exclusiv)"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+                onPressed: () => connectedBoard.setEONESettings(EONESettings(false, false, false, false, false, true)),
+                child: Text("Turn On")),
+            TextButton(
+                onPressed: () => connectedBoard.setEONESettings(EONESettings(false, false, false, false, false, false)),
+                child: Text("Turn Off")),
           ],
         ),
         SizedBox(height: 25),

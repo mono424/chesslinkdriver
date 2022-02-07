@@ -7,10 +7,12 @@ import 'package:chesslinkdriver/protocol/commands/GetVersion.dart';
 import 'package:chesslinkdriver/protocol/commands/Reset.dart';
 import 'package:chesslinkdriver/protocol/commands/SetAutomaticReports.dart';
 import 'package:chesslinkdriver/protocol/commands/SetAutomaticReportsTime.dart';
+import 'package:chesslinkdriver/protocol/commands/SetEONESettings.dart';
 import 'package:chesslinkdriver/protocol/commands/SetLedBrightness.dart';
 import 'package:chesslinkdriver/protocol/commands/SetLeds.dart';
 import 'package:chesslinkdriver/protocol/commands/SetScanTime.dart';
 import 'package:chesslinkdriver/protocol/model/ChessLinkBoardType.dart';
+import 'package:chesslinkdriver/protocol/model/EONESettings.dart';
 import 'package:chesslinkdriver/protocol/model/LEDPattern.dart';
 import 'package:chesslinkdriver/protocol/model/RequestConfig.dart';
 import 'package:chesslinkdriver/protocol/model/StatusReportSendInterval.dart';
@@ -186,6 +188,12 @@ class ChessLink {
       return SetLedBrightness(level).send(_client);
     }
     return SetLedBrightness(level).request(_client, _inputStream, config);
+  }
+
+  Future<void> setEONESettings(EONESettings settings, { RequestConfig config = const RequestConfig() }) async {
+    if (_boardType == ChessLinkBoardType.eONE) {
+      await SetEONESettings(settings).request(_client, _inputStream, config);
+    }
   }
 
 }

@@ -1,3 +1,7 @@
+## [0.0.8] - Millennium eONE improvement
+
+* Millennium eONE Settings
+
 ## [0.0.5] - Millennium eONE & new Example
 
 * Millennium eONE gets detected. Sadly by disabling parity check for now ...
