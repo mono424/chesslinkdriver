@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:chesslinkdriver/ChessLinkCommunicationClient.dart';
 import 'package:chesslinkdriver/ChessLinkMessage.dart';
 import 'package:chesslinkdriver/protocol/commands/ExtinguishAllLeds.dart';
+import 'package:chesslinkdriver/protocol/commands/GetEONESettings.dart';
 import 'package:chesslinkdriver/protocol/commands/GetStatus.dart';
 import 'package:chesslinkdriver/protocol/commands/GetVersion.dart';
 import 'package:chesslinkdriver/protocol/commands/Reset.dart';
@@ -194,6 +195,13 @@ class ChessLink {
     if (_boardType == ChessLinkBoardType.eONE) {
       await SetEONESettings(settings).request(_client, _inputStream, config);
     }
+  }
+
+  Future<EONESettings> getEONESettings({ RequestConfig config = const RequestConfig() }) async {
+    if (_boardType == ChessLinkBoardType.eONE) {
+      return await GetEONESettings().request(_client, _inputStream, config);
+    }
+    return null;
   }
 
 }

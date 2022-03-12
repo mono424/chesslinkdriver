@@ -51,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Timer updateSquareLedTimer;
   StreamSubscription<ConnectionStateUpdate> connection;
   String version;
+  EONESettings eoneSettings;
 
   Future<void> reqPermission() async {
     await Permission.locationWhenInUse.request();
@@ -90,14 +91,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void connect(DiscoveredDevice device) async {
     connection = flutterReactiveBle
-        .connectToDevice(
+    .connectToDevice(
       id: device.id,
       connectionTimeout: const Duration(seconds: 2),
-    )
-        .listen((connectionState) async {
+    ).listen((connectionState) async {
       print(connectionState.connectionState);
-      if (connectionState.connectionState ==
-          DeviceConnectionState.disconnected) {
+      if (connectionState.connectionState == DeviceConnectionState.disconnected) {
         disconnect();
         return;
       }
@@ -128,8 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
         connectedBoard = nBoard;
       });
 
-      updateSquareLedTimer = Timer.periodic(
-          Duration(milliseconds: 200), (t) => lightChangeSquare());
+      updateSquareLedTimer = Timer.periodic(Duration(milliseconds: 200), (t) => lightChangeSquare());
     }, onError: (Object e) {
       print(e);
     });
@@ -358,7 +356,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     connectedBoard.setScanTime(Duration(milliseconds: 523)),
                 child: Text("1.9 Scans/Sec")),
           ],
-        )
+        ),
+        SizedBox(height: 25),
+        Text("EONESettings"),
+        TextButton(
+          onPressed: () => connectedBoard.getEONESettings().then((newEoneSetting) => setState(() { eoneSettings = newEoneSetting; })),
+          child: Text("Retrieve Current Settings")
+        ),
+        eoneSettings != null ? Column(
+          children: [
+            Text("AutoReverse: " + (eoneSettings.boardAutoReverseEnabled ? "Yes" : "No")),
+            Text("IsReversed: " + (eoneSettings.boardIsReversed ? "Yes" : "No")),
+            Text("ChessRules: " + (eoneSettings.chessRulesEnabled ? "Yes" : "No")),
+            Text("ErrLEDsOnStartup: " + (eoneSettings.errorLedsEnabledOnStartup ? "Yes" : "No")),
+            Text("ErrLEDsTurnedOffOnLCom: " + (eoneSettings.errorLedsTurnedOffOnLCommand ? "Yes" : "No")),
+            Text("LEDsAreShowingErrors: " + (eoneSettings.ledsAreShowingErrors ? "Yes" : "No")),
+          ],
+        ) : Text("-"),
       ],
     );
   }

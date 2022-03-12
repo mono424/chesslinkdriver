@@ -80,6 +80,10 @@ class ChessLinkMessage {
     return num.toRadixString(16).padLeft(2, "0").toUpperCase();
   }
 
+  static int hexToNum(String num) {
+    return int.parse(num, radix: 16);
+  }
+
   int nextChecksumIndex(List<String> chars, { int start = 0 }) {
     bool foundOneNum = false;
     for (var i = start; i < chars.length; i++) {
