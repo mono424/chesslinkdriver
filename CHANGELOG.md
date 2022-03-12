@@ -1,3 +1,7 @@
+## [0.0.10] - Minor Bug Fix
+
+* Fix: stream relistening error in getter (ChessLinkCommunicationClient)
+
 ## [0.0.9] - Millennium eONE improvement
 
 * Add Get eONE Settings command
