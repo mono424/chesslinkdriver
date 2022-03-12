@@ -1,3 +1,7 @@
+## [0.0.9] - Millennium eONE improvement
+
+* Add Get eONE Settings command
+
 ## [0.0.8] - Millennium eONE improvement
 
 * Millennium eONE Settings

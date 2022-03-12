@@ -20,5 +20,5 @@ to your Android/iOS application.
 | Get Automatic Reports  	| -                   	    | ❌         	|
 | Set Scan time          	| setScanTime()        	    | ✅         	|
 | Get Scan time          	| -                   	    | ❌         	|
-| Set eONE Settings        	| -                   	    | ✅         	|
-| Get eONE Settings        	| -                   	    | ❌         	|
+| Set eONE Settings        	| setEONESettings()  	    | ✅         	|
+| Get eONE Settings        	| getEONESettings()    	    | ✅          	|
